@@ -1,2 +1,0 @@
-# McpOfPlaywrite
-McpOfPlaywrite

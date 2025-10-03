@@ -1,11 +1,9 @@
 # ts 目录结构与文件说明
 
 ## 顶层
-- `ts/README.md`：占位文件，仅包含文件名，提示此目录有独立说明文档。
 
 ## `ts/mcp`
 - `ts/mcp/DEPS.list`：声明 `program.ts` 与 `index.ts` 对 SDK、浏览器和扩展模块的依赖关系。
-- `ts/mcp/README.md`：空文件，保留未来文档位置。
 - `ts/mcp/config.d.ts`：定义 Playwright MCP 的配置类型与工具能力枚举，描述浏览器、服务器、网络、超时及输出等选项。
 - `ts/mcp/index.ts`：导出创建 MCP 服务器的工厂方法，解析用户配置并包装 `BrowserServerBackend`；提供可注入自定义上下文的工厂。
 - `ts/mcp/log.ts`：封装 debug 日志通道并提供 `logUnhandledError` 辅助方法。
@@ -13,7 +11,6 @@
 
 ### `ts/mcp/browser`
 - `ts/mcp/browser/DEPS.list`：声明浏览器模块依赖工具集合、SDK 与日志等内部模块。
-- `ts/mcp/browser/README.md`：空文件。
 - `ts/mcp/browser/actions.d.ts`：类型声明 MCP 录制动作和信号（点击、输入、导航、断言等）及上下文封装。
 - `ts/mcp/browser/browserContextFactory.ts`：根据配置创建或共享浏览器上下文，支持持久化、隔离、远程、CDP、共享模式，并处理跟踪、用户数据目录与 init scripts。
 - `ts/mcp/browser/browserServerBackend.ts`：MCP 服务器后端实现，负责初始化浏览器上下文、注册工具、调用工具并写入会话日志。
@@ -28,7 +25,6 @@
 
 #### `ts/mcp/browser/tools`
 - `ts/mcp/browser/tools/DEPS.list`：声明工具依赖浏览器与 SDK 基础设施。
-- `ts/mcp/browser/tools/README.md`：空文件。
 - `ts/mcp/browser/tools/tool.ts`：定义工具/标签页工具的通用接口与包装逻辑（含模态状态检查）。
 - `ts/mcp/browser/tools/utils.ts`：提供等待网络完成、locator 生成、文件名格式化等辅助函数。
 - `ts/mcp/browser/tools/common.ts`：实现关闭浏览器和调整窗口大小的基础工具。
@@ -52,14 +48,12 @@
 
 ### `ts/mcp/extension`
 - `ts/mcp/extension/DEPS.list`：标注扩展桥接层依赖 SDK HTTP 工具等。
-- `ts/mcp/extension/README.md`：空文件。
 - `ts/mcp/extension/cdpRelay.ts`：实现 WebSocket 中继，将 MCP 与浏览器扩展之间的 CDP 流量桥接，并管理连接、会话和命令转发。
 - `ts/mcp/extension/extensionContextFactory.ts`：通过扩展桥接启动或复用浏览器，确保 MCP 上下文能与扩展通信。
 - `ts/mcp/extension/protocol.ts`：定义扩展桥接的命令、事件及协议版本。
 
 ### `ts/mcp/sdk`
 - `ts/mcp/sdk/DEPS.list`：指向外部打包实现 `mcpBundleImpl`。
-- `ts/mcp/sdk/README.md`：说明该目录为无其他依赖的通用 MCP 工具集合。
 - `ts/mcp/sdk/bundle.ts`：从 `mcpBundleImpl` re-export MCP SDK、zod 与 JSON schema 转换等依赖。
 - `ts/mcp/sdk/exports.ts`：聚合导出 SDK 内部模块（传输、服务器、工具、HTTP、MDB）。
 - `ts/mcp/sdk/http.ts`：创建/装饰 HTTP 服务器、安装 SSE 与流式传输，实现会话管理与 DNS 保护。
@@ -71,7 +65,6 @@
 
 ### `ts/mcp/test`
 - `ts/mcp/test/DEPS.list`：列出测试后端依赖（浏览器工具、报告器、运行器等）。
-- `ts/mcp/test/README.md`：空文件。
 - `ts/mcp/test/browserBackend.ts`：在测试结束或失败时挂起 MCP 浏览器后端，输出页面状态和快照供人工处理。
 - `ts/mcp/test/generatorTools.ts`：生成器工具集，支持页面预置、读取执行日志及将生成的测试代码写入文件。
 - `ts/mcp/test/plannerTools.ts`：规划工具，运行种子测试以准备页面供规划流程使用。
@@ -84,4 +77,3 @@
 
 ## 其他文件
 - `ts/mcp/index.ts`、`ts/mcp/program.ts`、`ts/mcp/log.ts` 已在上方分类描述。
-- 目录中的 `README.md`（多数为空）用于占位未来文档。

@@ -44,6 +44,9 @@ public sealed partial class PlaywrightTools
     private static string ShotsDir =>
         Path.GetFullPath("./shots");
 
+    private static string PdfDir =>
+        Path.GetFullPath("./pdf");
+
     private static string TracesDir =>
         Path.GetFullPath("./traces");
 
@@ -252,6 +255,7 @@ public sealed partial class PlaywrightTools
             Directory.CreateDirectory(DownloadsDir);
             Directory.CreateDirectory(VideosDir);
             Directory.CreateDirectory(ShotsDir);
+            Directory.CreateDirectory(PdfDir);
             Directory.CreateDirectory(TracesDir);
         }
     }
@@ -298,7 +302,7 @@ public sealed partial class PlaywrightTools
     }
 
     // ----------------------
-    // Helper methods (±¾ÎÄ¼şÄÚÌá¹©£¬½â¾ö¡°µ±Ç°ÉÏÏÂÎÄÖĞ²»´æÔÚÃû³Æ ...¡±)
+    // Helper methods (æœ¬æ–‡ä»¶å†…æä¾›ï¼Œè§£å†³â€œå½“å‰ä¸Šä¸‹æ–‡ä¸­ä¸å­˜åœ¨åç§° ...â€)
     // ----------------------
 
     private static MouseButton? ParseMouseButton(string? button)
@@ -309,7 +313,7 @@ public sealed partial class PlaywrightTools
             case "left": return MouseButton.Left;
             case "middle": return MouseButton.Middle;
             case "right": return MouseButton.Right;
-            default: return null; // Î´Ê¶±ğÔò½»¸ø Playwright Ä¬ÈÏ£¨Left£©
+            default: return null; // æœªè¯†åˆ«åˆ™äº¤ç»™ Playwright é»˜è®¤ï¼ˆLeftï¼‰
         }
     }
 
@@ -340,11 +344,11 @@ public sealed partial class PlaywrightTools
                         : KeyboardModifier.Control);
                     break;
                 default:
-                    // ºöÂÔÎ´ÖªĞŞÊÎ¼ü£¬±£³Ö¿íÈİ
+                    // å¿½ç•¥æœªçŸ¥ä¿®é¥°é”®ï¼Œä¿æŒå®½å®¹
                     break;
             }
         }
-        // È¥ÖØ
+        // å»é‡
         return list.Distinct().ToArray();
     }
 

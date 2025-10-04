@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>示例登录页</title>
+    <style>
+      body {
+        font-family: "Segoe UI", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      .login-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 32px;
+        width: 100%;
+        max-width: 360px;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin: 0 0 24px;
+        text-align: center;
+        color: #333333;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555555;
+        font-weight: 600;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 16px;
+        border: 1px solid #dcdcdc;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s ease;
+      }
+
+      input[type="text"]:focus,
+      input[type="password"]:focus {
+        border-color: #4f46e5;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #4f46e5;
+        border: none;
+        border-radius: 6px;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      button:hover {
+        background-color: #4338ca;
+      }
+
+      .hint {
+        font-size: 13px;
+        color: #888888;
+        margin-top: 12px;
+        text-align: center;
+      }
+
+      .error-message {
+        color: #d93025;
+        text-align: center;
+        margin-bottom: 12px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="login-card">
+      <h1>登录示例</h1>
+      <form id="login-form">
+        <label for="username">用户名</label>
+        <input id="username" type="text" name="username" value="demo" autocomplete="username" required />
+
+        <label for="password">密码</label>
+        <input id="password" type="password" name="password" placeholder="请输入密码" autocomplete="current-password" required />
+
+        <p id="error-message" class="error-message">用户名或密码错误，请重试。</p>
+
+        <button type="submit">登录</button>
+      </form>
+      <p class="hint">用户名：demo，密码：123456</p>
+    </main>
+
+    <script>
+      const USERNAME = "demo";
+      const PASSWORD = "123456";
+
+      document.getElementById("login-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const username = (document.getElementById("username").value || "").trim();
+        const password = document.getElementById("password").value;
+        const errorMessage = document.getElementById("error-message");
+
+        if (username === USERNAME && password === PASSWORD) {
+          errorMessage.style.display = "none";
+          alert("登录成功，欢迎回来！");
+          window.location.href = "test.html";
+        } else {
+          errorMessage.style.display = "block";
+        }
+      });
+    </script>
+  </body>
+</html>

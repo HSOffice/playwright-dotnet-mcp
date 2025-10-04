@@ -12,6 +12,7 @@ public static class BrowserTools
     {
         var groups = new[]
         {
+            RelaunchTools.CreateTools(),
             CommonTools.CreateTools(),
             ConsoleTools.CreateTools(),
             DialogsTools.CreateTools(),

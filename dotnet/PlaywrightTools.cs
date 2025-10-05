@@ -38,6 +38,7 @@ public sealed partial class PlaywrightTools
         RegisterTool(new ToolMetadata("browser_close", "Close and dispose Playwright browser resources.", "action", "core"));
         RegisterTool(new ToolMetadata("browser_navigate", "Navigate to a URL.", "action", "core"));
         RegisterTool(new ToolMetadata("browser_navigate_back", "Go back to the previous page.", "action", "core"));
+        RegisterTool(new ToolMetadata("browser_fill_form", "Fill form", "input", "core"));
     }
 
     private static bool Headless =>

@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -13,13 +14,18 @@ internal sealed class SnapshotManager
         cancellationToken.ThrowIfCancellationRequested();
 
         var page = tab.Page;
-        AccessibilitySnapshot? aria = null;
+        JsonElement? aria = null;
         try
         {
-            aria = await page.Accessibility.SnapshotAsync(new AccessibilitySnapshotOptions
+            var snapshot = await page.Accessibility.SnapshotAsync(new AccessibilitySnapshotOptions
             {
                 InterestingOnly = false
             }).ConfigureAwait(false);
+
+            if (snapshot is not null)
+            {
+                aria = JsonSerializer.SerializeToElement(snapshot, snapshot.GetType());
+            }
         }
         catch (PlaywrightException)
         {

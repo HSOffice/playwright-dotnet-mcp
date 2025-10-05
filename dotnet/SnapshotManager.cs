@@ -17,11 +17,14 @@ internal sealed class SnapshotManager
         JsonElement? aria = null;
         try
         {
-            var accessibilitySnapshot = await GetAccessibilitySnapshotAsync(page, cancellationToken).ConfigureAwait(false);
-
-            if (accessibilitySnapshot is not null)
+            var snapshot = await page.Accessibility.SnapshotAsync(new AccessibilitySnapshotOptions
             {
-                aria = JsonSerializer.SerializeToElement(accessibilitySnapshot, accessibilitySnapshot.GetType());
+                InterestingOnly = false
+            }).ConfigureAwait(false);
+
+            if (snapshot is not null)
+            {
+                aria = JsonSerializer.SerializeToElement(snapshot, snapshot.GetType());
             }
         }
         catch (PlaywrightException)

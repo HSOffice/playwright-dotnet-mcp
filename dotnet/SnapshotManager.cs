@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -13,13 +14,15 @@ internal sealed class SnapshotManager
         cancellationToken.ThrowIfCancellationRequested();
 
         var page = tab.Page;
-        AccessibilitySnapshot? aria = null;
+        JsonElement? aria = null;
         try
         {
-            aria = await page.Accessibility.SnapshotAsync(new AccessibilitySnapshotOptions
+            var accessibilitySnapshot = await GetAccessibilitySnapshotAsync(page, cancellationToken).ConfigureAwait(false);
+
+            if (accessibilitySnapshot is not null)
             {
-                InterestingOnly = false
-            }).ConfigureAwait(false);
+                aria = JsonSerializer.SerializeToElement(accessibilitySnapshot, accessibilitySnapshot.GetType());
+            }
         }
         catch (PlaywrightException)
         {
@@ -42,5 +45,72 @@ internal sealed class SnapshotManager
 
         tab.UpdateMetadata(url, title, snapshot);
         return snapshot;
+    }
+
+    private static async Task<object?> GetAccessibilitySnapshotAsync(IPage page, CancellationToken cancellationToken)
+    {
+        var options = new AccessibilitySnapshotOptions
+        {
+            InterestingOnly = false
+        };
+
+        var snapshotTask = InvokeAccessibilitySnapshotAsync(page, options, cancellationToken);
+        if (snapshotTask is not null)
+        {
+            await snapshotTask.ConfigureAwait(false);
+            return GetTaskResult(snapshotTask);
+        }
+
+        var accessibility = page.GetType().GetProperty("Accessibility")?.GetValue(page);
+        if (accessibility is not null)
+        {
+            var legacyTask = InvokeLegacySnapshotAsync(accessibility, options);
+            if (legacyTask is not null)
+            {
+                await legacyTask.ConfigureAwait(false);
+                return GetTaskResult(legacyTask);
+            }
+        }
+
+        return null;
+    }
+
+    private static Task? InvokeAccessibilitySnapshotAsync(IPage page, AccessibilitySnapshotOptions options, CancellationToken cancellationToken)
+    {
+        var pageType = page.GetType();
+
+        var method = pageType.GetMethod(
+            "AccessibilitySnapshotAsync",
+            new[] { typeof(AccessibilitySnapshotOptions), typeof(CancellationToken) })
+            ?? pageType.GetMethod("AccessibilitySnapshotAsync", new[] { typeof(AccessibilitySnapshotOptions) });
+
+        if (method is null)
+        {
+            return null;
+        }
+
+        var parameters = method.GetParameters().Length == 2
+            ? new object?[] { options, cancellationToken }
+            : new object?[] { options };
+
+        return method.Invoke(page, parameters) as Task;
+    }
+
+    private static Task? InvokeLegacySnapshotAsync(object accessibility, AccessibilitySnapshotOptions options)
+    {
+        var method = accessibility.GetType().GetMethod("SnapshotAsync", new[] { typeof(AccessibilitySnapshotOptions) });
+        if (method is null)
+        {
+            return null;
+        }
+
+        return method.Invoke(accessibility, new object?[] { options }) as Task;
+    }
+
+    private static object? GetTaskResult(Task task)
+    {
+        var type = task.GetType();
+        var resultProperty = type.GetProperty("Result");
+        return resultProperty?.GetValue(task);
     }
 }

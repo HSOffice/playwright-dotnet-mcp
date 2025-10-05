@@ -7,7 +7,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using ChatUiTest.Playwright.Helper;
 using Microsoft.Playwright;
 using ModelContextProtocol.Server;
 
@@ -87,7 +86,13 @@ public sealed partial class PlaywrightTools
             }).ConfigureAwait(false);
 
             _context.Page += ContextOnPage;
-            await _context.GrantAllPermissionsAsync().ConfigureAwait(false);
+            await _context.GrantPermissionsAsync(new[]
+            {
+                "clipboard-read",
+                "clipboard-write",
+                "geolocation",
+                "notifications"
+            }).ConfigureAwait(false);
 
             foreach (var page in _context.Pages.Where(p => !p.IsClosed))
             {

@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Playwright;
 using ModelContextProtocol.Server;
 
 namespace PlaywrightMcpServer;
@@ -14,14 +15,31 @@ public sealed partial class PlaywrightTools
         [Description("The URL to navigate to.")] string url,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for navigating to the requested URL.
-        // Pseudocode:
-        // 1. Validate and normalize the provided URL.
-        // 2. Retrieve the active page instance.
-        // 3. Direct the page to navigate to the URL and await completion.
-        // 4. Return navigation details in a serialized payload.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            throw new ArgumentException("URL must not be empty.", nameof(url));
+        }
+
+        var normalizedUrl = NormalizeUrl(url);
+        var tab = await GetActiveTabAsync(cancellationToken).ConfigureAwait(false);
+
+        var response = await tab.Page.GotoAsync(normalizedUrl, new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.NetworkIdle
+        }).ConfigureAwait(false);
+
+        var snapshot = await SnapshotManager.CaptureAsync(tab, cancellationToken).ConfigureAwait(false);
+
+        var result = new
+        {
+            navigated = true,
+            url = tab.Page.Url,
+            status = response?.Status,
+            snapshot,
+            tabs = TabManager.DescribeTabs()
+        };
+
+        return Serialize(result);
     }
 
     [McpServerTool(Name = "browser_navigate_back")]
@@ -29,12 +47,23 @@ public sealed partial class PlaywrightTools
     public static async Task<string> BrowserNavigateBackAsync(
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for returning to the previous page in history.
-        // Pseudocode:
-        // 1. Retrieve the active page instance.
-        // 2. Trigger the go-back navigation if available.
-        // 3. Return the updated history state in a serialized payload.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        var tab = await GetActiveTabAsync(cancellationToken).ConfigureAwait(false);
+        var response = await tab.Page.GoBackAsync(new PageGoBackOptions
+        {
+            WaitUntil = WaitUntilState.Load
+        }).ConfigureAwait(false);
+
+        var snapshot = await SnapshotManager.CaptureAsync(tab, cancellationToken).ConfigureAwait(false);
+
+        var result = new
+        {
+            navigated = response is not null,
+            url = tab.Page.Url,
+            status = response?.Status,
+            snapshot,
+            tabs = TabManager.DescribeTabs()
+        };
+
+        return Serialize(result);
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
 
-internal sealed record ConsoleMessageEntry
+public sealed record ConsoleMessageEntry
 {
     [JsonPropertyName("timestamp")] public DateTimeOffset Timestamp { get; init; }
     [JsonPropertyName("type")] public string Type { get; init; } = string.Empty;
@@ -14,7 +14,7 @@ internal sealed record ConsoleMessageEntry
     [JsonPropertyName("args")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string[]? Args { get; init; }
 }
 
-internal sealed class NetworkRequestEntry
+public sealed class NetworkRequestEntry
 {
     [JsonPropertyName("timestamp")] public DateTimeOffset Timestamp { get; init; }
     [JsonPropertyName("method")] public string Method { get; init; } = string.Empty;
@@ -34,7 +34,7 @@ internal sealed class NetworkRequestEntry
     };
 }
 
-internal sealed record SnapshotPayload
+public sealed record SnapshotPayload
 {
     [JsonPropertyName("timestamp")] public DateTimeOffset Timestamp { get; init; }
     [JsonPropertyName("url")] public string Url { get; init; } = string.Empty;
@@ -44,7 +44,7 @@ internal sealed record SnapshotPayload
     [JsonPropertyName("network")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<NetworkRequestEntry>? Network { get; init; }
 }
 
-internal sealed record TabDescriptor
+public sealed record TabDescriptor
 {
     [JsonPropertyName("id")] public string Id { get; init; } = string.Empty;
     [JsonPropertyName("url")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Url { get; init; }

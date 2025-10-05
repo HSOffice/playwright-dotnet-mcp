@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Playwright;
 
@@ -38,7 +39,7 @@ internal sealed record SnapshotPayload
     [JsonPropertyName("timestamp")] public DateTimeOffset Timestamp { get; init; }
     [JsonPropertyName("url")] public string Url { get; init; } = string.Empty;
     [JsonPropertyName("title")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Title { get; init; }
-    [JsonPropertyName("aria")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public AccessibilitySnapshot? Aria { get; init; }
+    [JsonPropertyName("aria")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public JsonElement? Aria { get; init; }
     [JsonPropertyName("console")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<ConsoleMessageEntry>? Console { get; init; }
     [JsonPropertyName("network")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<NetworkRequestEntry>? Network { get; init; }
 }

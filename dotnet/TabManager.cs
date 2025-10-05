@@ -154,7 +154,7 @@ internal sealed class TabState : IDisposable
     private readonly EventHandler<IRequest> _requestHandler;
     private readonly EventHandler<IResponse> _responseHandler;
     private readonly EventHandler<IRequest> _requestFailedHandler;
-    private readonly EventHandler _closeHandler;
+    private readonly EventHandler<IPage> _closeHandler;
 
     public TabState(IPage page, string id, DateTimeOffset createdAt, Action<TabState> onClosed)
     {

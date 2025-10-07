@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
@@ -12,6 +14,13 @@ internal sealed class TabManager
     private readonly Dictionary<IPage, TabState> _tabs = new(new ReferenceEqualityComparer<IPage>());
     private TabState? _activeTab;
     private int _sequence;
+
+    private readonly SnapshotManager _snapshotManager;
+
+    public TabManager(SnapshotManager snapshotManager)
+    {
+        _snapshotManager = snapshotManager ?? throw new ArgumentNullException(nameof(snapshotManager));
+    }
 
     public TabState? ActiveTab
     {
@@ -45,7 +54,7 @@ internal sealed class TabManager
         {
             if (!_tabs.TryGetValue(page, out tab!))
             {
-                tab = new TabState(page, $"tab-{++_sequence}", DateTimeOffset.UtcNow, Remove);
+                tab = new TabState(page, $"tab-{++_sequence}", DateTimeOffset.UtcNow, Remove, _snapshotManager);
                 _tabs.Add(page, tab);
                 attachHandlers = true;
             }
@@ -149,6 +158,7 @@ internal sealed class TabState : IDisposable
     private readonly List<NetworkRequestEntry> _networkRequests = new();
     private readonly Dictionary<IRequest, NetworkRequestEntry> _requestMap = new(new ReferenceEqualityComparer<IRequest>());
     private readonly Action<TabState> _onClosed;
+    private readonly SnapshotManager _snapshotManager;
 
     private readonly EventHandler<IConsoleMessage> _consoleHandler;
     private readonly EventHandler<IRequest> _requestHandler;
@@ -156,12 +166,18 @@ internal sealed class TabState : IDisposable
     private readonly EventHandler<IRequest> _requestFailedHandler;
     private readonly EventHandler<IPage> _closeHandler;
 
-    public TabState(IPage page, string id, DateTimeOffset createdAt, Action<TabState> onClosed)
+    public TabState(
+        IPage page,
+        string id,
+        DateTimeOffset createdAt,
+        Action<TabState> onClosed,
+        SnapshotManager snapshotManager)
     {
         Page = page ?? throw new ArgumentNullException(nameof(page));
         Id = id ?? throw new ArgumentNullException(nameof(id));
         CreatedAt = createdAt;
         _onClosed = onClosed ?? throw new ArgumentNullException(nameof(onClosed));
+        _snapshotManager = snapshotManager ?? throw new ArgumentNullException(nameof(snapshotManager));
 
         _consoleHandler = (_, message) =>
         {
@@ -269,6 +285,36 @@ internal sealed class TabState : IDisposable
                 _consoleMessages.ToArray(),
                 _networkRequests.Select(entry => entry.Clone()).ToArray());
         }
+    }
+
+    public async Task<SnapshotPayload> CaptureSnapshotAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            return await _snapshotManager
+                .CaptureAsync(this, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (PlaywrightException)
+        {
+            // Fall back to a minimal snapshot payload that still exposes tab metadata.
+        }
+
+        return new SnapshotPayload
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Url = Page.Url ?? Url ?? string.Empty,
+            Title = Title ?? string.Empty,
+            Console = Array.Empty<ConsoleMessageEntry>(),
+            Network = Array.Empty<NetworkRequestEntry>(),
+            Aria = null
+        };
     }
 
     public void UpdateMetadata(string? url, string? title, SnapshotPayload snapshot)

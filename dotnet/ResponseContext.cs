@@ -8,12 +8,10 @@ namespace PlaywrightMcpServer;
 public sealed class ResponseContext
 {
     private readonly TabManager _tabManager;
-    private readonly SnapshotManager _snapshotManager;
 
-    internal ResponseContext(TabManager tabManager, SnapshotManager snapshotManager, ResponseConfiguration configuration)
+    internal ResponseContext(TabManager tabManager, ResponseConfiguration configuration)
     {
         _tabManager = tabManager ?? throw new ArgumentNullException(nameof(tabManager));
-        _snapshotManager = snapshotManager ?? throw new ArgumentNullException(nameof(snapshotManager));
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
@@ -26,5 +24,5 @@ public sealed class ResponseContext
     public IReadOnlyList<TabDescriptor> DescribeTabs() => _tabManager.DescribeTabs();
 
     internal Task<SnapshotPayload> CaptureSnapshotAsync(TabState tab, CancellationToken cancellationToken)
-        => _snapshotManager.CaptureAsync(tab, cancellationToken);
+        => tab.CaptureSnapshotAsync(cancellationToken);
 }

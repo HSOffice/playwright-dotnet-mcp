@@ -65,6 +65,37 @@ public sealed partial class PlaywrightTools
 
     private static string Serialize(object value) => JsonSerializer.Serialize(value, JsonOptions);
 
+    private static string Serialize(Response response)
+        => JsonSerializer.Serialize(response.Serialize(), JsonOptions);
+
+    private static async Task<string> ExecuteWithResponseAsync(
+        string toolName,
+        IReadOnlyDictionary<string, object?> args,
+        Func<Response, CancellationToken, Task> handler,
+        CancellationToken cancellationToken)
+    {
+        var response = CreateResponse(toolName, args);
+        response.LogBegin();
+
+        try
+        {
+            await handler(response, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            response.LogEnd();
+            throw;
+        }
+        catch (Exception ex)
+        {
+            response.AddError(ex.Message);
+        }
+
+        await response.FinishAsync(cancellationToken).ConfigureAwait(false);
+        response.LogEnd();
+        return Serialize(response);
+    }
+
     private static Response CreateResponse(string toolName, IReadOnlyDictionary<string, object?> args, Action<string>? logger = null)
         => new(new ResponseContext(TabManager, SnapshotManager, ResponseConfiguration), toolName, args, logger);
 

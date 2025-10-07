@@ -24,6 +24,7 @@ public sealed partial class PlaywrightTools
     private static readonly object Gate = new();
     private static readonly SnapshotManager SnapshotManager = new();
     private static readonly TabManager TabManager = new();
+    private static readonly ResponseConfiguration ResponseConfiguration = new();
     private static readonly Dictionary<string, ToolMetadata> ToolRegistry = new(StringComparer.OrdinalIgnoreCase);
 
     private static IPlaywright? _playwright;
@@ -63,6 +64,9 @@ public sealed partial class PlaywrightTools
         Path.GetFullPath("./traces");
 
     private static string Serialize(object value) => JsonSerializer.Serialize(value, JsonOptions);
+
+    private static Response CreateResponse(string toolName, IReadOnlyDictionary<string, object?> args, Action<string>? logger = null)
+        => new(new ResponseContext(TabManager, SnapshotManager, ResponseConfiguration), toolName, args, logger);
 
     private static async Task EnsureLaunchedAsync(CancellationToken cancellationToken)
     {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,25 +22,38 @@ public sealed partial class PlaywrightTools
         }
 
         var normalizedUrl = NormalizeUrl(url);
-        var tab = await GetActiveTabAsync(cancellationToken).ConfigureAwait(false);
-
-        var response = await tab.Page.GotoAsync(normalizedUrl, new PageGotoOptions
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
-            WaitUntil = WaitUntilState.NetworkIdle
-        }).ConfigureAwait(false);
-
-        var snapshot = await SnapshotManager.CaptureAsync(tab, cancellationToken).ConfigureAwait(false);
-
-        var result = new
-        {
-            navigated = true,
-            url = tab.Page.Url,
-            status = response?.Status,
-            snapshot,
-            tabs = TabManager.DescribeTabs()
+            ["url"] = normalizedUrl
         };
 
-        return Serialize(result);
+        return await ExecuteWithResponseAsync(
+            "browser_navigate",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var navigationResponse = await tab.Page.GotoAsync(normalizedUrl, new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.NetworkIdle
+                }).ConfigureAwait(false);
+
+                var resultLines = new List<string>
+                {
+                    $"Navigated to {tab.Page.Url}"
+                };
+
+                if (navigationResponse is not null)
+                {
+                    resultLines.Add($"Status: {navigationResponse.Status}");
+                }
+
+                response.AddResult(string.Join("\n", resultLines));
+                response.AddCode($"await page.goto('{normalizedUrl.Replace("'", "\\'")}');");
+                response.SetIncludeSnapshot();
+                response.SetIncludeTabs();
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "browser_navigate_back")]
@@ -47,23 +61,35 @@ public sealed partial class PlaywrightTools
     public static async Task<string> BrowserNavigateBackAsync(
         CancellationToken cancellationToken = default)
     {
-        var tab = await GetActiveTabAsync(cancellationToken).ConfigureAwait(false);
-        var response = await tab.Page.GoBackAsync(new PageGoBackOptions
-        {
-            WaitUntil = WaitUntilState.Load
-        }).ConfigureAwait(false);
+        return await ExecuteWithResponseAsync(
+            "browser_navigate_back",
+            new Dictionary<string, object?>(StringComparer.Ordinal),
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var navigationResponse = await tab.Page.GoBackAsync(new PageGoBackOptions
+                {
+                    WaitUntil = WaitUntilState.Load
+                }).ConfigureAwait(false);
 
-        var snapshot = await SnapshotManager.CaptureAsync(tab, cancellationToken).ConfigureAwait(false);
+                if (navigationResponse is null)
+                {
+                    response.AddResult("No previous page in history to navigate back to.");
+                }
+                else
+                {
+                    var resultLines = new List<string>
+                    {
+                        $"Navigated back to {tab.Page.Url}",
+                        $"Status: {navigationResponse.Status}"
+                    };
+                    response.AddResult(string.Join("\n", resultLines));
+                }
 
-        var result = new
-        {
-            navigated = response is not null,
-            url = tab.Page.Url,
-            status = response?.Status,
-            snapshot,
-            tabs = TabManager.DescribeTabs()
-        };
-
-        return Serialize(result);
+                response.AddCode("await page.goBack();");
+                response.SetIncludeSnapshot();
+                response.SetIncludeTabs();
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 }

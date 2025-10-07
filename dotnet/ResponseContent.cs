@@ -29,7 +29,9 @@ public sealed record ImageContent(string Data, string MimeType) : IResponseConte
     public string MimeTypeValue => MimeType;
 }
 
-public sealed record SerializedResponse(IReadOnlyList<IResponseContent> Content, bool? IsError);
+public sealed record SerializedResponse(
+    [property: JsonPropertyName("content")] IReadOnlyList<IResponseContent> Content,
+    [property: JsonPropertyName("isError")] bool? IsError);
 
 public sealed class ResponseSerializationOptions
 {

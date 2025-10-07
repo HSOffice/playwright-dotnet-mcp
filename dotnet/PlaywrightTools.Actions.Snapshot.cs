@@ -11,10 +11,10 @@ public sealed partial class PlaywrightTools
 {
     [McpServerTool(Name = "browser_snapshot")]
     [Description("Capture accessibility snapshot of the current page, this is better than screenshot.")]
-    public static async Task<string> BrowserSnapshotAsync(
+    public static Task<string> BrowserSnapshotAsync(
         CancellationToken cancellationToken = default)
     {
-        return await ExecuteWithResponseAsync(
+        return ExecuteWithResponseAsync(
             "browser_snapshot",
             new Dictionary<string, object?>(StringComparer.Ordinal),
             async (response, token) =>
@@ -24,6 +24,6 @@ public sealed partial class PlaywrightTools
                 await GetActiveTabAsync(token).ConfigureAwait(false);
                 response.SetIncludeSnapshot();
             },
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken);
     }
 }

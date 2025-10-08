@@ -6,6 +6,15 @@ using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
 
+public sealed record ModalStateEntry
+{
+    [JsonPropertyName("type")] public string Type { get; init; } = string.Empty;
+    [JsonPropertyName("description")] public string Description { get; init; } = string.Empty;
+    [JsonPropertyName("clearedBy")] public string ClearedBy { get; init; } = string.Empty;
+    [JsonIgnore] public IDialog? Dialog { get; init; }
+    [JsonIgnore] public IFileChooser? FileChooser { get; init; }
+}
+
 public sealed record ConsoleMessageEntry
 {
     [JsonPropertyName("timestamp")] public DateTimeOffset Timestamp { get; init; }
@@ -42,6 +51,7 @@ public sealed record SnapshotPayload
     [JsonPropertyName("aria")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public JsonElement? Aria { get; init; }
     [JsonPropertyName("console")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<ConsoleMessageEntry>? Console { get; init; }
     [JsonPropertyName("network")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<NetworkRequestEntry>? Network { get; init; }
+    [JsonPropertyName("modalStates")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<ModalStateEntry>? ModalStates { get; init; }
 }
 
 public sealed record TabDescriptor

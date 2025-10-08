@@ -10,6 +10,24 @@ internal static class SnapshotMarkdownBuilder
     {
         var lines = new List<string>();
 
+        if (snapshot.ModalStates is { } modalStates)
+        {
+            lines.Add("### Modal state");
+            if (modalStates.Count == 0)
+            {
+                lines.Add("- There is no modal state present");
+            }
+            else
+            {
+                foreach (var state in modalStates)
+                {
+                    lines.Add($"- [{state.Description}]: can be handled by the \"{state.ClearedBy}\" tool");
+                }
+            }
+
+            lines.Add(string.Empty);
+        }
+
         if (snapshot.Console is { Count: > 0 })
         {
             lines.Add("### New console messages");

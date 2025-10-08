@@ -38,35 +38,40 @@ In the C# implementation we model the same responsibility with `TabState` and `S
 ```csharp
 internal sealed class TabState
 {
-    private readonly SnapshotManager _snapshotManager;
-
-    public async Task<SnapshotPayload> CaptureSnapshotAsync(CancellationToken cancellationToken = default)
+    internal async Task<SnapshotPayload> CaptureSnapshotAsync(SnapshotManager snapshotManager, CancellationToken cancellationToken)
     {
         SnapshotPayload? snapshot = null;
-        var modalStates = await RaceAgainstModalStatesAsync(async () =>
+        var modalStates = await RaceAgainstModalStatesAsync(async ct =>
         {
-            snapshot = await _snapshotManager
-                .CaptureAsync(this, cancellationToken)
+            snapshot = await snapshotManager
+                .CaptureAsync(this, ct)
                 .ConfigureAwait(false);
-        }).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
         if (snapshot is not null)
         {
-            // console/network data is already populated by SnapshotManager
-            return snapshot;
+            return snapshot with
+            {
+                ModalStates = GetModalStatesSnapshot()
+            };
         }
+
+        var fallbackStates = modalStates.Count == 0
+            ? GetModalStatesSnapshot()
+            : modalStates;
 
         return new SnapshotPayload
         {
             Timestamp = DateTimeOffset.UtcNow,
             Url = Page.Url ?? string.Empty,
             Title = string.Empty,
+            Aria = null,
             Console = Array.Empty<ConsoleMessageEntry>(),
             Network = Array.Empty<NetworkRequestEntry>(),
-            Aria = null,
+            ModalStates = fallbackStates
         };
     }
 }
 ```
 
-The helper uses the public `SnapshotManager.CaptureAsync` API【F:dotnet/SnapshotManager.cs†L11-L45】, which in turn mirrors the TypeScript snapshot logic by reading the tab's Playwright page, serialising the accessibility tree, and persisting console/network metadata back onto the `TabState` instance.【F:dotnet/TabManager.cs†L243-L280】 The `RaceAgainstModalStatesAsync` placeholder represents the same modal handling that the TypeScript version performs before producing a fallback snapshot payload.
+The helper uses the public `SnapshotManager.CaptureAsync` API【F:dotnet/SnapshotManager.cs†L11-L47】, which in turn mirrors the TypeScript snapshot logic by reading the tab's Playwright page, serialising the accessibility tree, and persisting console/network metadata back onto the `TabState` instance.【F:dotnet/TabManager.cs†L207-L341】 The `RaceAgainstModalStatesAsync` helper mirrors the same modal handling that the TypeScript version performs before producing a fallback snapshot payload.

@@ -578,6 +578,12 @@ internal sealed class TabState : IDisposable
         var disposeGate = 0;
         var frameNavigated = false;
 
+        EventHandler<IRequest>? requestHandler = null;
+        EventHandler<IResponse>? responseHandler = null;
+        EventHandler<IRequest>? requestFailedHandler = null;
+        EventHandler<IFrame>? frameNavigatedHandler = null;
+        IDisposable? timeoutRegistration = null;
+
         void DisposeHandlers()
         {
             if (Interlocked.Exchange(ref disposeGate, 1) != 0)
@@ -585,10 +591,25 @@ internal sealed class TabState : IDisposable
                 return;
             }
 
-            Page.Request -= requestHandler;
-            Page.Response -= responseHandler;
-            Page.RequestFailed -= requestFailedHandler;
-            Page.FrameNavigated -= frameNavigatedHandler;
+            if (requestHandler is not null)
+            {
+                Page.Request -= requestHandler;
+            }
+
+            if (responseHandler is not null)
+            {
+                Page.Response -= responseHandler;
+            }
+
+            if (requestFailedHandler is not null)
+            {
+                Page.RequestFailed -= requestFailedHandler;
+            }
+
+            if (frameNavigatedHandler is not null)
+            {
+                Page.FrameNavigated -= frameNavigatedHandler;
+            }
         }
 
         void TrySignalCompletion()
@@ -667,12 +688,6 @@ internal sealed class TabState : IDisposable
                 }
             }, completionSource, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
-
-        EventHandler<IRequest>? requestHandler = null;
-        EventHandler<IResponse>? responseHandler = null;
-        EventHandler<IRequest>? requestFailedHandler = null;
-        EventHandler<IFrame>? frameNavigatedHandler = null;
-        IDisposable? timeoutRegistration = null;
 
         requestHandler = (_, request) =>
         {
@@ -773,7 +788,7 @@ internal sealed class TabState : IDisposable
             throw new ArgumentNullException(nameof(callback));
         }
 
-        return new Timer(static state =>
+        return new System.Threading.Timer(static state =>
         {
             var action = (Action)state!;
             action();

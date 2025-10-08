@@ -494,7 +494,7 @@ internal sealed class TabState : IDisposable
             if (cancellationToken.IsCancellationRequested)
             {
                 tcs.TrySetResult(false);
-                return tcs.Task;
+                return false;
             }
 
             _downloadWaiters.Add(tcs);

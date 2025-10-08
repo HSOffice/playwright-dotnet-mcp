@@ -123,6 +123,81 @@ public class TabStateTests
         tab.Dispose();
     }
 
+    [Fact]
+    public void GetNetworkRequests_ReturnsClones()
+    {
+        var (tab, pageMock, requestHandler, responseHandler, _, _) = CreateTabWithNetworkCapture();
+        var onRequest = Assert.NotNull(requestHandler);
+        var onResponse = Assert.NotNull(responseHandler);
+
+        var request = CreateRequestMock("GET", "https://example.com/api", "xhr");
+        var response = CreateResponseMock(request, status: 200);
+
+        onRequest(pageMock.Object, request.Object);
+        onResponse(pageMock.Object, response.Object);
+
+        var first = tab.GetNetworkRequests();
+        var entry = Assert.Single(first);
+        Assert.Equal(200, entry.Status);
+        Assert.Null(entry.Failure);
+
+        entry.Status = 404;
+        entry.Failure = "Not Found";
+
+        var second = tab.GetNetworkRequests();
+        var secondEntry = Assert.Single(second);
+        Assert.Equal(200, secondEntry.Status);
+        Assert.Null(secondEntry.Failure);
+
+        tab.Dispose();
+    }
+
+    [Fact]
+    public async Task NavigateAsync_ClearsNetworkRequestsBeforeNavigation()
+    {
+        var (tab, pageMock, requestHandler, responseHandler, _, setUrl) = CreateTabWithNetworkCapture();
+        var onRequest = Assert.NotNull(requestHandler);
+        var onResponse = Assert.NotNull(responseHandler);
+
+        var initialRequest = CreateRequestMock("POST", "https://example.com/api", "xhr");
+        var initialResponse = CreateResponseMock(initialRequest, status: 201);
+        onRequest(pageMock.Object, initialRequest.Object);
+        onResponse(pageMock.Object, initialResponse.Object);
+
+        Assert.Single(tab.GetNetworkRequests());
+
+        pageMock.Setup(p => p.GotoAsync(It.IsAny<string>(), It.IsAny<PageGotoOptions?>()))
+            .Returns<string, PageGotoOptions?>((url, _) =>
+            {
+                setUrl(url);
+                Assert.Empty(tab.GetNetworkRequests());
+
+                var navigationRequest = CreateRequestMock("GET", url, "document");
+                var navigationResponse = CreateResponseMock(navigationRequest, status: 200);
+
+                onRequest(pageMock.Object, navigationRequest.Object);
+                onResponse(pageMock.Object, navigationResponse.Object);
+
+                return Task.FromResult<IResponse?>(navigationResponse.Object);
+            });
+
+        var response = await tab.NavigateAsync("https://contoso.test/", new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.NetworkIdle
+        }, CancellationToken.None).ConfigureAwait(false);
+
+        Assert.NotNull(response);
+        Assert.Equal(200, response!.Status);
+
+        var requestsAfter = tab.GetNetworkRequests();
+        var entry = Assert.Single(requestsAfter);
+        Assert.Equal("https://contoso.test/", entry.Url);
+        Assert.Equal("GET", entry.Method);
+        Assert.Equal(200, entry.Status);
+
+        tab.Dispose();
+    }
+
     private static Mock<IPage> CreatePageMock(string snapshot, out Dictionary<string, Mock<ILocator>> locatorMap)
     {
         locatorMap = new Dictionary<string, Mock<ILocator>>(StringComparer.Ordinal)
@@ -195,6 +270,79 @@ public class TabStateTests
         message.SetupGet(m => m.Text).Returns(text);
         message.Setup(m => m.Args).Returns(Array.Empty<IJSHandle>());
         return message;
+    }
+
+    private static (
+        TabState Tab,
+        Mock<IPage> PageMock,
+        EventHandler<IRequest>? RequestHandler,
+        EventHandler<IResponse>? ResponseHandler,
+        EventHandler<IRequest>? RequestFailedHandler,
+        Action<string> UpdateUrl) CreateTabWithNetworkCapture()
+    {
+        var pageMock = new Mock<IPage>(MockBehavior.Strict);
+        var currentUrl = "https://example.com/";
+
+        pageMock.SetupGet(p => p.Url).Returns(() => currentUrl);
+        pageMock.Setup(p => p.TitleAsync()).ReturnsAsync("Example");
+
+        EventHandler<IConsoleMessage>? consoleHandler = null;
+        pageMock.SetupAdd(p => p.Console += It.IsAny<EventHandler<IConsoleMessage>>())
+            .Callback<EventHandler<IConsoleMessage>>(handler => consoleHandler += handler);
+        pageMock.SetupRemove(p => p.Console -= It.IsAny<EventHandler<IConsoleMessage>>())
+            .Callback<EventHandler<IConsoleMessage>>(handler => consoleHandler -= handler);
+
+        EventHandler<IRequest>? requestHandler = null;
+        pageMock.SetupAdd(p => p.Request += It.IsAny<EventHandler<IRequest>>())
+            .Callback<EventHandler<IRequest>>(handler => requestHandler += handler);
+        pageMock.SetupRemove(p => p.Request -= It.IsAny<EventHandler<IRequest>>())
+            .Callback<EventHandler<IRequest>>(handler => requestHandler -= handler);
+
+        EventHandler<IResponse>? responseHandler = null;
+        pageMock.SetupAdd(p => p.Response += It.IsAny<EventHandler<IResponse>>())
+            .Callback<EventHandler<IResponse>>(handler => responseHandler += handler);
+        pageMock.SetupRemove(p => p.Response -= It.IsAny<EventHandler<IResponse>>())
+            .Callback<EventHandler<IResponse>>(handler => responseHandler -= handler);
+
+        EventHandler<IRequest>? requestFailedHandler = null;
+        pageMock.SetupAdd(p => p.RequestFailed += It.IsAny<EventHandler<IRequest>>())
+            .Callback<EventHandler<IRequest>>(handler => requestFailedHandler += handler);
+        pageMock.SetupRemove(p => p.RequestFailed -= It.IsAny<EventHandler<IRequest>>())
+            .Callback<EventHandler<IRequest>>(handler => requestFailedHandler -= handler);
+
+        pageMock.SetupAdd(p => p.Close += It.IsAny<EventHandler<IPage>>());
+        pageMock.SetupRemove(p => p.Close -= It.IsAny<EventHandler<IPage>>());
+        pageMock.SetupAdd(p => p.Dialog += It.IsAny<EventHandler<IDialog>>());
+        pageMock.SetupRemove(p => p.Dialog -= It.IsAny<EventHandler<IDialog>>());
+        pageMock.SetupAdd(p => p.FileChooser += It.IsAny<EventHandler<IFileChooser>>());
+        pageMock.SetupRemove(p => p.FileChooser -= It.IsAny<EventHandler<IFileChooser>>());
+        pageMock.SetupAdd(p => p.Download += It.IsAny<EventHandler<IDownload>>());
+        pageMock.SetupRemove(p => p.Download -= It.IsAny<EventHandler<IDownload>>());
+        pageMock.Setup(p => p.WaitForLoadStateAsync(It.IsAny<LoadState>(), It.IsAny<PageWaitForLoadStateOptions?>()))
+            .Returns(Task.CompletedTask);
+
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+        tab.AttachHandlers();
+
+        return (tab, pageMock, requestHandler, responseHandler, requestFailedHandler, newUrl => currentUrl = newUrl);
+    }
+
+    private static Mock<IRequest> CreateRequestMock(string method, string url, string? resourceType)
+    {
+        var request = new Mock<IRequest>(MockBehavior.Strict);
+        request.SetupGet(r => r.Method).Returns(method);
+        request.SetupGet(r => r.Url).Returns(url);
+        request.SetupGet(r => r.ResourceType).Returns(resourceType);
+        request.SetupGet(r => r.Failure).Returns((string?)null);
+        return request;
+    }
+
+    private static Mock<IResponse> CreateResponseMock(Mock<IRequest> request, int status)
+    {
+        var response = new Mock<IResponse>(MockBehavior.Strict);
+        response.SetupGet(r => r.Request).Returns(request.Object);
+        response.SetupGet(r => r.Status).Returns(status);
+        return response;
     }
 
     private interface IPageSnapshotForAi

@@ -388,7 +388,7 @@ internal sealed class TabState : IDisposable
 
             return (
                 consoleSnapshot,
-                _networkRequests.Select(entry => entry.Clone()).ToArray());
+                CloneNetworkRequestsUnsafe());
         }
     }
 
@@ -409,6 +409,19 @@ internal sealed class TabState : IDisposable
             return _consoleMessages
                 .Where(static entry => string.Equals(entry.Type, "error", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
+        }
+    }
+
+    public IReadOnlyList<NetworkRequestEntry> GetNetworkRequests()
+    {
+        lock (_gate)
+        {
+            if (_networkRequests.Count == 0)
+            {
+                return Array.Empty<NetworkRequestEntry>();
+            }
+
+            return CloneNetworkRequestsUnsafe();
         }
     }
 
@@ -622,6 +635,22 @@ internal sealed class TabState : IDisposable
             _networkRequests.Clear();
             _requestMap.Clear();
         }
+    }
+
+    private NetworkRequestEntry[] CloneNetworkRequestsUnsafe()
+    {
+        if (_networkRequests.Count == 0)
+        {
+            return Array.Empty<NetworkRequestEntry>();
+        }
+
+        var result = new NetworkRequestEntry[_networkRequests.Count];
+        for (var i = 0; i < _networkRequests.Count; i++)
+        {
+            result[i] = _networkRequests[i].Clone();
+        }
+
+        return result;
     }
 
     internal IReadOnlyList<ModalStateEntry> GetModalStatesSnapshot()

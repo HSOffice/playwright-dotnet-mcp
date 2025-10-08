@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
@@ -13,12 +15,53 @@ public sealed partial class PlaywrightTools
     public static async Task<string> BrowserNetworkRequestsAsync(
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for collecting network requests from the session.
-        // Pseudocode:
-        // 1. Access stored or live network request data from the page or context.
-        // 2. Aggregate the requests since page load.
-        // 3. Return the data in a serialized structure.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        return await ExecuteWithResponseAsync(
+            "browser_network_requests",
+            new Dictionary<string, object?>(StringComparer.Ordinal),
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var requests = tab.GetNetworkRequests();
+
+                if (requests.Count == 0)
+                {
+                    response.AddResult("No network requests recorded.");
+                    return;
+                }
+
+                foreach (var request in requests)
+                {
+                    response.AddResult(FormatNetworkRequest(request));
+                }
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static string FormatNetworkRequest(NetworkRequestEntry request)
+    {
+        var builder = new StringBuilder();
+        var method = string.IsNullOrEmpty(request.Method)
+            ? string.Empty
+            : request.Method.ToUpperInvariant();
+
+        builder.Append('[').Append(method).Append("] ");
+        builder.Append(request.Url);
+
+        if (!string.IsNullOrEmpty(request.ResourceType))
+        {
+            builder.Append(" (").Append(request.ResourceType).Append(')');
+        }
+
+        if (request.Status.HasValue)
+        {
+            builder.Append(" => [").Append(request.Status.Value).Append(']');
+        }
+
+        if (!string.IsNullOrEmpty(request.Failure))
+        {
+            builder.Append(" => Failed: ").Append(request.Failure);
+        }
+
+        return builder.ToString();
     }
 }

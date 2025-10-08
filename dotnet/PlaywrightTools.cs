@@ -215,6 +215,9 @@ public sealed partial class PlaywrightTools
             : Path.Combine(basePath, outputPath));
     }
 
+    internal static string ResolveDownloadOutputPath(string outputPath)
+        => ResolveOutputPath(outputPath, DownloadsDir);
+
     private static void ContextOnPage(object? sender, IPage page)
     {
         TabManager.Register(page, makeActive: false);

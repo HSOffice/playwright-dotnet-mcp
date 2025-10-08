@@ -151,6 +151,7 @@ internal sealed class TabState : IDisposable
     private readonly List<NetworkRequestEntry> _networkRequests = new();
     private readonly Dictionary<IRequest, NetworkRequestEntry> _requestMap = new(new ReferenceEqualityComparer<IRequest>());
     private readonly List<ModalStateEntry> _modalStates = new();
+    private readonly List<DownloadEntry> _downloads = new();
     private readonly List<TaskCompletionSource<IReadOnlyList<ModalStateEntry>>> _modalStateWaiters = new();
     private readonly Action<TabState> _onClosed;
 
@@ -161,6 +162,7 @@ internal sealed class TabState : IDisposable
     private readonly EventHandler<IPage> _closeHandler;
     private readonly EventHandler<IDialog> _dialogHandler;
     private readonly EventHandler<IFileChooser> _fileChooserHandler;
+    private readonly EventHandler<IDownload> _downloadHandler;
 
     public TabState(IPage page, string id, DateTimeOffset createdAt, Action<TabState> onClosed)
     {
@@ -241,6 +243,7 @@ internal sealed class TabState : IDisposable
         _closeHandler = (_, _) => _onClosed(this);
         _dialogHandler = (_, dialog) => OnDialog(dialog);
         _fileChooserHandler = (_, chooser) => OnFileChooser(chooser);
+        _downloadHandler = (_, download) => _ = HandleDownloadAsync(download);
     }
 
     public string Id { get; }
@@ -259,6 +262,7 @@ internal sealed class TabState : IDisposable
         Page.Close += _closeHandler;
         Page.Dialog += _dialogHandler;
         Page.FileChooser += _fileChooserHandler;
+        Page.Download += _downloadHandler;
         Url = Page.Url;
     }
 
@@ -271,6 +275,7 @@ internal sealed class TabState : IDisposable
         Page.Close -= _closeHandler;
         Page.Dialog -= _dialogHandler;
         Page.FileChooser -= _fileChooserHandler;
+        Page.Download -= _downloadHandler;
     }
 
     public (IReadOnlyList<ConsoleMessageEntry> console, IReadOnlyList<NetworkRequestEntry> network) TakeActivitySnapshot()
@@ -303,6 +308,19 @@ internal sealed class TabState : IDisposable
         }
     }
 
+    internal IReadOnlyList<DownloadEntry> GetDownloadsSnapshot()
+    {
+        lock (_gate)
+        {
+            if (_downloads.Count == 0)
+            {
+                return Array.Empty<DownloadEntry>();
+            }
+
+            return _downloads.Select(entry => entry.Clone()).ToArray();
+        }
+    }
+
     internal async Task<SnapshotPayload> CaptureSnapshotAsync(SnapshotManager snapshotManager, CancellationToken cancellationToken)
     {
         if (snapshotManager is null)
@@ -320,13 +338,15 @@ internal sealed class TabState : IDisposable
         {
             return snapshot with
             {
-                ModalStates = GetModalStatesSnapshot()
+                ModalStates = GetModalStatesSnapshot(),
+                Downloads = GetDownloadsSnapshot()
             };
         }
 
         var fallbackStates = modalStates.Count == 0
             ? GetModalStatesSnapshot()
             : modalStates;
+        var downloads = GetDownloadsSnapshot();
 
         return new SnapshotPayload
         {
@@ -336,7 +356,8 @@ internal sealed class TabState : IDisposable
             Aria = null,
             Console = Array.Empty<ConsoleMessageEntry>(),
             Network = Array.Empty<NetworkRequestEntry>(),
-            ModalStates = fallbackStates.Count == 0 ? Array.Empty<ModalStateEntry>() : fallbackStates
+            ModalStates = fallbackStates.Count == 0 ? Array.Empty<ModalStateEntry>() : fallbackStates,
+            Downloads = downloads.Count == 0 ? Array.Empty<DownloadEntry>() : downloads
         };
     }
 
@@ -352,6 +373,43 @@ internal sealed class TabState : IDisposable
                 IsActive = isActive,
                 CreatedAt = CreatedAt
             };
+        }
+    }
+
+    private Task HandleDownloadAsync(IDownload download)
+    {
+        ArgumentNullException.ThrowIfNull(download);
+
+        var suggestedFileName = download.SuggestedFilename ?? $"download-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}";
+        var outputPath = PlaywrightTools.ResolveDownloadOutputPath(suggestedFileName);
+        var entry = new DownloadEntry
+        {
+            SuggestedFileName = suggestedFileName,
+            OutputPath = outputPath,
+            Finished = false
+        };
+
+        lock (_gate)
+        {
+            _downloads.Add(entry);
+        }
+
+        return SaveAsync();
+
+        async Task SaveAsync()
+        {
+            try
+            {
+                await download.SaveAsAsync(outputPath).ConfigureAwait(false);
+                lock (_gate)
+                {
+                    entry.Finished = true;
+                }
+            }
+            catch
+            {
+                // Keep the entry to reflect the failed download attempt.
+            }
         }
     }
 

@@ -200,6 +200,65 @@ public class TabStateTests
     }
 
     [Fact]
+    public async Task WaitForLoadStateAsync_InvokesPlaywrightLoadState()
+    {
+        var pageMock = new Mock<IPage>(MockBehavior.Strict);
+        pageMock.Setup(p => p.WaitForLoadStateAsync(It.IsAny<LoadState>(), It.IsAny<PageWaitForLoadStateOptions?>()))
+            .Returns(Task.CompletedTask);
+
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+
+        var options = new PageWaitForLoadStateOptions
+        {
+            Timeout = 1234
+        };
+
+        await tab.WaitForLoadStateAsync(options: options, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+
+        pageMock.Verify(p => p.WaitForLoadStateAsync(LoadState.Load, options), Times.Once);
+    }
+
+    [Fact]
+    public async Task WaitForLoadStateAsync_IgnoresTimeoutExceptions()
+    {
+        var pageMock = new Mock<IPage>(MockBehavior.Strict);
+        pageMock.Setup(p => p.WaitForLoadStateAsync(It.IsAny<LoadState>(), It.IsAny<PageWaitForLoadStateOptions?>()))
+            .Returns(Task.FromException(new TimeoutException()));
+
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+
+        await tab.WaitForLoadStateAsync(cancellationToken: CancellationToken.None).ConfigureAwait(false);
+
+        pageMock.Verify(p => p.WaitForLoadStateAsync(LoadState.Load, It.IsAny<PageWaitForLoadStateOptions?>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WaitForLoadStateAsync_IgnoresPlaywrightTimeoutExceptions()
+    {
+        var pageMock = new Mock<IPage>(MockBehavior.Strict);
+        pageMock.Setup(p => p.WaitForLoadStateAsync(It.IsAny<LoadState>(), It.IsAny<PageWaitForLoadStateOptions?>()))
+            .Returns(Task.FromException(new PlaywrightException("Timeout 5000ms exceeded")));
+
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+
+        await tab.WaitForLoadStateAsync(cancellationToken: CancellationToken.None).ConfigureAwait(false);
+
+        pageMock.Verify(p => p.WaitForLoadStateAsync(LoadState.Load, It.IsAny<PageWaitForLoadStateOptions?>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WaitForLoadStateAsync_ThrowsWhenStateUnsupported()
+    {
+        var pageMock = new Mock<IPage>();
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+
+        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            tab.WaitForLoadStateAsync(LoadState.DOMContentLoaded, cancellationToken: CancellationToken.None)).ConfigureAwait(false);
+
+        Assert.Contains("Only LoadState.Load is supported.", exception.Message);
+    }
+
+    [Fact]
     public async Task WaitForTimeoutAsync_UsesEvaluateWhenNotBlocked()
     {
         var pageMock = new Mock<IPage>();

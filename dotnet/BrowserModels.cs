@@ -43,6 +43,20 @@ public sealed class NetworkRequestEntry
     };
 }
 
+public sealed class DownloadEntry
+{
+    [JsonPropertyName("suggestedFileName")] public string SuggestedFileName { get; init; } = string.Empty;
+    [JsonPropertyName("outputPath")] public string OutputPath { get; init; } = string.Empty;
+    [JsonPropertyName("finished")] public bool Finished { get; set; }
+
+    public DownloadEntry Clone() => new()
+    {
+        SuggestedFileName = SuggestedFileName,
+        OutputPath = OutputPath,
+        Finished = Finished
+    };
+}
+
 public sealed record SnapshotPayload
 {
     [JsonPropertyName("timestamp")] public DateTimeOffset Timestamp { get; init; }
@@ -52,6 +66,7 @@ public sealed record SnapshotPayload
     [JsonPropertyName("console")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<ConsoleMessageEntry>? Console { get; init; }
     [JsonPropertyName("network")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<NetworkRequestEntry>? Network { get; init; }
     [JsonPropertyName("modalStates")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<ModalStateEntry>? ModalStates { get; init; }
+    [JsonPropertyName("downloads")][JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public IReadOnlyList<DownloadEntry>? Downloads { get; init; }
 }
 
 public sealed record TabDescriptor

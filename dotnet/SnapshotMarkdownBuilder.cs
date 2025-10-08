@@ -39,6 +39,24 @@ internal static class SnapshotMarkdownBuilder
             lines.Add(string.Empty);
         }
 
+        if (snapshot.Downloads is { Count: > 0 })
+        {
+            lines.Add("### Downloads");
+            foreach (var entry in snapshot.Downloads)
+            {
+                if (entry.Finished)
+                {
+                    lines.Add($"- Downloaded file {entry.SuggestedFileName} to {entry.OutputPath}");
+                }
+                else
+                {
+                    lines.Add($"- Downloading file {entry.SuggestedFileName} ...");
+                }
+            }
+
+            lines.Add(string.Empty);
+        }
+
         if (snapshot.Network is { Count: > 0 })
         {
             lines.Add("### Network requests");

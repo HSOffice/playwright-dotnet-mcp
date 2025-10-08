@@ -81,6 +81,14 @@ public sealed class Response
         {
             _snapshot = await _context.CaptureSnapshotAsync(_context.CurrentTab, cancellationToken).ConfigureAwait(false);
         }
+
+        if (_includeTabs)
+        {
+            foreach (var tab in _context.Tabs)
+            {
+                await tab.UpdateTitleAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 
     public SerializedResponse Serialize(ResponseSerializationOptions? options = null)

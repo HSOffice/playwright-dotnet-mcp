@@ -42,69 +42,72 @@ public sealed partial class PlaywrightTools
                 var page = tab.Page;
                 var updates = new List<string>();
 
-                foreach (var field in request.Fields)
+                await tab.WaitForCompletionAsync(async ct =>
                 {
-                    token.ThrowIfCancellationRequested();
-
-                    if (field is null)
+                    foreach (var field in request.Fields)
                     {
-                        continue;
-                    }
+                        ct.ThrowIfCancellationRequested();
 
-                    if (string.IsNullOrWhiteSpace(field.Reference))
-                    {
-                        throw new ArgumentException($"Field \"{field.Name}\" is missing the required \"ref\" value.");
-                    }
-
-                    var normalizedType = NormalizeFieldType(field.Type);
-                    if (normalizedType == BrowserFillFormFieldType.Unknown)
-                    {
-                        throw new ArgumentException($"Unsupported field type '{field.Type}'.");
-                    }
-
-                    var locator = page.Locator($"aria-ref={field.Reference}");
-                    var locatorSource = $"await page.locator({QuoteJsString($"aria-ref={field.Reference}")})";
-
-                    try
-                    {
-                        switch (normalizedType)
+                        if (field is null)
                         {
-                            case BrowserFillFormFieldType.Textbox:
-                            case BrowserFillFormFieldType.Slider:
-                                {
-                                    var secret = LookupSecret(field.Value);
-                                    await locator.FillAsync(secret.Value).ConfigureAwait(false);
-                                    response.AddCode($"{locatorSource}.fill({secret.Code});");
-                                    updates.Add($"- Filled {DescribeField(field)}.");
-                                    break;
-                                }
+                            continue;
+                        }
 
-                            case BrowserFillFormFieldType.Checkbox:
-                            case BrowserFillFormFieldType.Radio:
-                                {
-                                    var isChecked = ParseBoolean(field.Value, field.Name);
-                                    await locator.SetCheckedAsync(isChecked).ConfigureAwait(false);
-                                    var literal = isChecked ? "true" : "false";
-                                    response.AddCode($"{locatorSource}.setChecked({literal});");
-                                    updates.Add($"- Set {DescribeField(field)} to {(isChecked ? "checked" : "unchecked")}.");
-                                    break;
-                                }
+                        if (string.IsNullOrWhiteSpace(field.Reference))
+                        {
+                            throw new ArgumentException($"Field \"{field.Name}\" is missing the required \"ref\" value.");
+                        }
 
-                            case BrowserFillFormFieldType.Combobox:
-                                {
-                                    var optionLabel = field.Value ?? string.Empty;
-                                    await locator.SelectOptionAsync(new[] { new SelectOptionValue { Label = optionLabel } }).ConfigureAwait(false);
-                                    response.AddCode($"{locatorSource}.selectOption({QuoteJsString(optionLabel)});");
-                                    updates.Add($"- Selected \"{optionLabel}\" for {DescribeField(field)}.");
-                                    break;
-                                }
+                        var normalizedType = NormalizeFieldType(field.Type);
+                        if (normalizedType == BrowserFillFormFieldType.Unknown)
+                        {
+                            throw new ArgumentException($"Unsupported field type '{field.Type}'.");
+                        }
+
+                        var locator = page.Locator($"aria-ref={field.Reference}");
+                        var locatorSource = $"await page.locator({QuoteJsString($"aria-ref={field.Reference}")})";
+
+                        try
+                        {
+                            switch (normalizedType)
+                            {
+                                case BrowserFillFormFieldType.Textbox:
+                                case BrowserFillFormFieldType.Slider:
+                                    {
+                                        var secret = LookupSecret(field.Value);
+                                        await locator.FillAsync(secret.Value).ConfigureAwait(false);
+                                        response.AddCode($"{locatorSource}.fill({secret.Code});");
+                                        updates.Add($"- Filled {DescribeField(field)}.");
+                                        break;
+                                    }
+
+                                case BrowserFillFormFieldType.Checkbox:
+                                case BrowserFillFormFieldType.Radio:
+                                    {
+                                        var isChecked = ParseBoolean(field.Value, field.Name);
+                                        await locator.SetCheckedAsync(isChecked).ConfigureAwait(false);
+                                        var literal = isChecked ? "true" : "false";
+                                        response.AddCode($"{locatorSource}.setChecked({literal});");
+                                        updates.Add($"- Set {DescribeField(field)} to {(isChecked ? "checked" : "unchecked")}.");
+                                        break;
+                                    }
+
+                                case BrowserFillFormFieldType.Combobox:
+                                    {
+                                        var optionLabel = field.Value ?? string.Empty;
+                                        await locator.SelectOptionAsync(new[] { new SelectOptionValue { Label = optionLabel } }).ConfigureAwait(false);
+                                        response.AddCode($"{locatorSource}.selectOption({QuoteJsString(optionLabel)});");
+                                        updates.Add($"- Selected \"{optionLabel}\" for {DescribeField(field)}.");
+                                        break;
+                                    }
+                            }
+                        }
+                        catch (PlaywrightException ex)
+                        {
+                            throw CreateLocatorException(field, ex);
                         }
                     }
-                    catch (PlaywrightException ex)
-                    {
-                        throw CreateLocatorException(field, ex);
-                    }
-                }
+                }, token).ConfigureAwait(false);
 
                 if (updates.Count > 0)
                 {

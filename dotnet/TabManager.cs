@@ -359,6 +359,16 @@ internal sealed class TabState : IDisposable
         }
     }
 
+    public async Task WaitForCompletionAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
+    {
+        if (action is null)
+        {
+            throw new ArgumentNullException(nameof(action));
+        }
+
+        await RaceAgainstModalStatesAsync(ct => WaitForCompletionCoreAsync(action, ct), cancellationToken).ConfigureAwait(false);
+    }
+
     private void ClearActivityQueues()
     {
         lock (_gate)
@@ -559,6 +569,216 @@ internal sealed class TabState : IDisposable
 
     private static bool IsTimeoutException(PlaywrightException exception)
         => (exception.Message ?? string.Empty).Contains("Timeout", StringComparison.OrdinalIgnoreCase);
+
+    private async Task WaitForCompletionCoreAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
+    {
+        var outstandingRequests = new HashSet<IRequest>(new ReferenceEqualityComparer<IRequest>());
+        var requestsGate = new object();
+        var completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var disposeGate = 0;
+        var frameNavigated = false;
+
+        void DisposeHandlers()
+        {
+            if (Interlocked.Exchange(ref disposeGate, 1) != 0)
+            {
+                return;
+            }
+
+            Page.Request -= requestHandler;
+            Page.Response -= responseHandler;
+            Page.RequestFailed -= requestFailedHandler;
+            Page.FrameNavigated -= frameNavigatedHandler;
+        }
+
+        void TrySignalCompletion()
+        {
+            if (frameNavigated)
+            {
+                return;
+            }
+
+            lock (requestsGate)
+            {
+                if (outstandingRequests.Count == 0)
+                {
+                    completionSource.TrySetResult();
+                }
+            }
+        }
+
+        void OnRequestSettled(IRequest request)
+        {
+            if (request is null)
+            {
+                return;
+            }
+
+            lock (requestsGate)
+            {
+                if (!outstandingRequests.Remove(request) || frameNavigated || outstandingRequests.Count > 0)
+                {
+                    return;
+                }
+            }
+
+            completionSource.TrySetResult();
+        }
+
+        async Task ObserveRequestAsync(IRequest request)
+        {
+            try
+            {
+                _ = await request.ResponseAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+            }
+            finally
+            {
+                OnRequestSettled(request);
+            }
+        }
+
+        void OnFrameNavigated(IFrame frame)
+        {
+            if (frame is null || frame.ParentFrame is not null)
+            {
+                return;
+            }
+
+            frameNavigated = true;
+            DisposeHandlers();
+            timeoutRegistration?.Dispose();
+
+            _ = WaitForLoadStateWithTimeoutAsync().ContinueWith(static (task, state) =>
+            {
+                var source = (TaskCompletionSource)state!;
+                try
+                {
+                    task.GetAwaiter().GetResult();
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    source.TrySetResult();
+                }
+            }, completionSource, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        EventHandler<IRequest>? requestHandler = null;
+        EventHandler<IResponse>? responseHandler = null;
+        EventHandler<IRequest>? requestFailedHandler = null;
+        EventHandler<IFrame>? frameNavigatedHandler = null;
+        IDisposable? timeoutRegistration = null;
+
+        requestHandler = (_, request) =>
+        {
+            if (request is null)
+            {
+                return;
+            }
+
+            lock (requestsGate)
+            {
+                outstandingRequests.Add(request);
+            }
+
+            _ = ObserveRequestAsync(request);
+        };
+
+        responseHandler = (_, response) =>
+        {
+            if (response?.Request is { } request)
+            {
+                OnRequestSettled(request);
+            }
+        };
+
+        requestFailedHandler = (_, request) => OnRequestSettled(request);
+        frameNavigatedHandler = (_, frame) => OnFrameNavigated(frame);
+
+        Page.Request += requestHandler;
+        Page.Response += responseHandler;
+        Page.RequestFailed += requestFailedHandler;
+        Page.FrameNavigated += frameNavigatedHandler;
+
+        timeoutRegistration = StartWaitForCompletionTimeout(() =>
+        {
+            DisposeHandlers();
+            completionSource.TrySetResult();
+        });
+
+        try
+        {
+            await action(cancellationToken).ConfigureAwait(false);
+            TrySignalCompletion();
+            await WaitForCompletionBarrierAsync(completionSource.Task, cancellationToken).ConfigureAwait(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            await WaitForPostActionDelayAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            timeoutRegistration?.Dispose();
+            DisposeHandlers();
+        }
+    }
+
+    private async Task WaitForPostActionDelayAsync()
+    {
+        try
+        {
+            await Page.WaitForTimeoutAsync(1000).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+        }
+        catch (PlaywrightException ex) when (IsTimeoutException(ex))
+        {
+        }
+    }
+
+    private static async Task WaitForCompletionBarrierAsync(Task barrier, CancellationToken cancellationToken)
+    {
+        if (barrier.IsCompleted)
+        {
+            await barrier.ConfigureAwait(false);
+            return;
+        }
+
+        var cancellationCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using (cancellationToken.Register(static state =>
+        {
+            var (source, token) = ((TaskCompletionSource<bool> source, CancellationToken token))state!;
+            source.TrySetCanceled(token);
+        }, (cancellationCompletion, cancellationToken)))
+        {
+            var completed = await Task.WhenAny(barrier, cancellationCompletion.Task).ConfigureAwait(false);
+            if (!ReferenceEquals(completed, barrier))
+            {
+                await completed.ConfigureAwait(false);
+            }
+
+            await barrier.ConfigureAwait(false);
+        }
+    }
+
+    private static IDisposable StartWaitForCompletionTimeout(Action callback)
+    {
+        if (callback is null)
+        {
+            throw new ArgumentNullException(nameof(callback));
+        }
+
+        return new Timer(static state =>
+        {
+            var action = (Action)state!;
+            action();
+        }, callback, TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+    }
 
     private async Task<IReadOnlyList<ModalStateEntry>> RaceAgainstModalStatesAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
     {

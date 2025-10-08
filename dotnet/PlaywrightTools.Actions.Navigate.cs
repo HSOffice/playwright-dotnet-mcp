@@ -67,10 +67,15 @@ public sealed partial class PlaywrightTools
             async (response, token) =>
             {
                 var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
-                var navigationResponse = await tab.Page.GoBackAsync(new PageGoBackOptions
+                IResponse? navigationResponse = null;
+
+                await tab.WaitForCompletionAsync(async ct =>
                 {
-                    WaitUntil = WaitUntilState.Load
-                }).ConfigureAwait(false);
+                    navigationResponse = await tab.Page.GoBackAsync(new PageGoBackOptions
+                    {
+                        WaitUntil = WaitUntilState.Load
+                    }).ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
 
                 if (navigationResponse is null)
                 {

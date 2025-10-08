@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -365,7 +366,12 @@ internal sealed class TabState : IDisposable
             var response = await Page.GotoAsync(url, options).ConfigureAwait(false);
             downloadCancellation.Cancel();
 
-            await WaitForLoadStateWithTimeoutAsync().ConfigureAwait(false);
+            await WaitForLoadStateAsync(
+                options: new PageWaitForLoadStateOptions
+                {
+                    Timeout = 5000
+                },
+                cancellationToken: cancellationToken).ConfigureAwait(false);
             return response;
         }
         catch (PlaywrightException ex) when (IsDownloadNavigationException(ex))
@@ -390,6 +396,21 @@ internal sealed class TabState : IDisposable
             {
             }
         }
+    }
+
+    public async Task WaitForLoadStateAsync(
+        LoadState state = LoadState.Load,
+        PageWaitForLoadStateOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (state != LoadState.Load)
+        {
+            throw new ArgumentOutOfRangeException(nameof(state), state, "Only LoadState.Load is supported.");
+        }
+
+        await RaceAgainstModalStatesAsync(
+            ct => WaitForLoadStateCoreAsync(state, options, ct),
+            cancellationToken).ConfigureAwait(false);
     }
 
     public (IReadOnlyList<ConsoleMessageEntry> console, IReadOnlyList<NetworkRequestEntry> network) TakeActivitySnapshot()
@@ -843,20 +864,57 @@ internal sealed class TabState : IDisposable
         }
     }
 
-    private async Task WaitForLoadStateWithTimeoutAsync()
+    private async Task WaitForLoadStateCoreAsync(LoadState state, PageWaitForLoadStateOptions? options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var waitTask = Page.WaitForLoadStateAsync(state, options);
+        if (!cancellationToken.CanBeCanceled)
+        {
+            await ObserveLoadStateTaskAsync(waitTask, CancellationToken.None).ConfigureAwait(false);
+            return;
+        }
+
+        var cancellationSignal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var registration = cancellationToken.Register(static state =>
+        {
+            var source = (TaskCompletionSource<bool>)state!;
+            source.TrySetResult(true);
+        }, cancellationSignal);
+
+        var completedTask = await Task.WhenAny(waitTask, cancellationSignal.Task).ConfigureAwait(false);
+        if (ReferenceEquals(completedTask, waitTask))
+        {
+            await ObserveLoadStateTaskAsync(waitTask, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private static async Task ObserveLoadStateTaskAsync(Task waitTask, CancellationToken cancellationToken)
     {
         try
         {
-            await Page.WaitForLoadStateAsync(LoadState.Load, new PageWaitForLoadStateOptions
-            {
-                Timeout = 5000
-            }).ConfigureAwait(false);
+            await waitTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (TimeoutException)
         {
         }
         catch (PlaywrightException ex) when (IsTimeoutException(ex))
         {
+        }
+        catch (PlaywrightException ex)
+        {
+            Debug.WriteLine(ex);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
         }
     }
 
@@ -1009,7 +1067,12 @@ internal sealed class TabState : IDisposable
             DisposeHandlers();
             timeoutRegistration?.Dispose();
 
-            _ = WaitForLoadStateWithTimeoutAsync().ContinueWith(static (task, state) =>
+            _ = WaitForLoadStateAsync(
+                options: new PageWaitForLoadStateOptions
+                {
+                    Timeout = 5000
+                },
+                cancellationToken: CancellationToken.None).ContinueWith(static (task, state) =>
             {
                 var source = (TaskCompletionSource)state!;
                 try

@@ -20,6 +20,7 @@
     <Compile Include="../SecretRedactor.cs" />
     <Compile Include="../SnapshotMarkdownBuilder.cs" />
     <Compile Include="../SnapshotManager.cs" />
+    <Compile Include="../ModalStateMarkdownBuilder.cs" />
     <Compile Include="../TabManager.cs" />
   </ItemGroup>
 </Project>

@@ -12,19 +12,7 @@ internal static class SnapshotMarkdownBuilder
 
         if (snapshot.ModalStates is { } modalStates)
         {
-            lines.Add("### Modal state");
-            if (modalStates.Count == 0)
-            {
-                lines.Add("- There is no modal state present");
-            }
-            else
-            {
-                foreach (var state in modalStates)
-                {
-                    lines.Add($"- [{state.Description}]: can be handled by the \"{state.ClearedBy}\" tool");
-                }
-            }
-
+            lines.AddRange(ModalStateMarkdownBuilder.Build(modalStates));
             lines.Add(string.Empty);
         }
 

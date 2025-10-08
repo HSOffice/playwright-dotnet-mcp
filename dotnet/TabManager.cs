@@ -103,6 +103,27 @@ internal sealed class TabManager
         }
     }
 
+    public TabState? ForPage(IPage page)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+
+        lock (_gate)
+        {
+            return _tabs.TryGetValue(page, out var tab) ? tab : null;
+        }
+    }
+
+    public IReadOnlyList<ConsoleMessageEntry> CollectConsoleMessages(IPage page, bool onlyErrors = false)
+    {
+        var tab = ForPage(page);
+        if (tab is null)
+        {
+            return Array.Empty<ConsoleMessageEntry>();
+        }
+
+        return tab.GetConsoleMessages(onlyErrors);
+    }
+
     public IReadOnlyList<TabRestoreEntry> CreateRestorePlan()
     {
         lock (_gate)
@@ -637,6 +658,11 @@ internal sealed class TabState : IDisposable
         }
     }
 
+    public IReadOnlyList<string> GetModalStatesMarkdown()
+    {
+        return ModalStateMarkdownBuilder.Build(GetModalStatesSnapshot());
+    }
+
     private NetworkRequestEntry[] CloneNetworkRequestsUnsafe()
     {
         if (_networkRequests.Count == 0)
@@ -844,6 +870,43 @@ internal sealed class TabState : IDisposable
     private static bool IsTimeoutException(PlaywrightException exception)
         => (exception.Message ?? string.Empty).Contains("Timeout", StringComparison.OrdinalIgnoreCase);
 
+    public async Task WaitForTimeoutAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+    {
+        if (timeout < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout));
+        }
+
+        if (timeout == TimeSpan.Zero)
+        {
+            return;
+        }
+
+        if (IsJavaScriptBlocked())
+        {
+            await Task.Delay(timeout, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        await RaceAgainstModalStatesAsync(async ct =>
+        {
+            ct.ThrowIfCancellationRequested();
+            var milliseconds = Math.Max(0, timeout.TotalMilliseconds);
+            await Page.EvaluateAsync<object>(
+                "(ms) => new Promise(resolve => setTimeout(resolve, ms))",
+                milliseconds).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    private bool IsJavaScriptBlocked()
+    {
+        lock (_gate)
+        {
+            return _modalStates.Any(state =>
+                string.Equals(state.Type, "dialog", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
     private async Task WaitForCompletionCoreAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
     {
         var outstandingRequests = new HashSet<IRequest>(new ReferenceEqualityComparer<IRequest>());
@@ -1020,7 +1083,7 @@ internal sealed class TabState : IDisposable
     {
         try
         {
-            await Page.WaitForTimeoutAsync(1000).ConfigureAwait(false);
+            await WaitForTimeoutAsync(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
         }
         catch (TimeoutException)
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -194,6 +195,72 @@ public class TabStateTests
         Assert.Equal("https://contoso.test/", entry.Url);
         Assert.Equal("GET", entry.Method);
         Assert.Equal(200, entry.Status);
+
+        tab.Dispose();
+    }
+
+    [Fact]
+    public async Task WaitForTimeoutAsync_UsesEvaluateWhenNotBlocked()
+    {
+        var pageMock = new Mock<IPage>();
+        pageMock.Setup(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<PageEvaluateOptions?>()))
+            .ReturnsAsync((object?)null);
+
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+
+        await tab.WaitForTimeoutAsync(TimeSpan.FromMilliseconds(250)).ConfigureAwait(false);
+
+        pageMock.Verify(p => p.EvaluateAsync<object>(
+            "(ms) => new Promise(resolve => setTimeout(resolve, ms))",
+            It.Is<object?>(arg => arg is double value && Math.Abs(value - 250d) < 0.001),
+            It.IsAny<PageEvaluateOptions?>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WaitForTimeoutAsync_UsesDelayWhenJavaScriptBlocked()
+    {
+        var manager = new TabManager();
+        var pageMock = new Mock<IPage>();
+        pageMock.SetupGet(p => p.Url).Returns("https://example.com/");
+        pageMock.Setup(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<PageEvaluateOptions?>()))
+            .Throws(new InvalidOperationException("Should not evaluate"));
+
+        var tab = manager.Register(pageMock.Object);
+
+        var dialogMock = new Mock<IDialog>();
+        dialogMock.SetupGet(d => d.Type).Returns("alert");
+        dialogMock.SetupGet(d => d.Message).Returns("Blocking dialog");
+        pageMock.Raise(p => p.Dialog += null!, dialogMock.Object);
+
+        var watch = Stopwatch.StartNew();
+        await tab.WaitForTimeoutAsync(TimeSpan.FromMilliseconds(20)).ConfigureAwait(false);
+        watch.Stop();
+
+        Assert.True(watch.Elapsed >= TimeSpan.FromMilliseconds(20));
+        pageMock.Verify(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<PageEvaluateOptions?>()), Times.Never);
+
+        tab.Dispose();
+    }
+
+    [Fact]
+    public void GetModalStatesMarkdown_ReturnsFormattedLines()
+    {
+        var manager = new TabManager();
+        var pageMock = new Mock<IPage>();
+        pageMock.SetupGet(p => p.Url).Returns("https://example.com/");
+
+        var tab = manager.Register(pageMock.Object);
+
+        var dialogMock = new Mock<IDialog>();
+        dialogMock.SetupGet(d => d.Type).Returns("prompt");
+        dialogMock.SetupGet(d => d.Message).Returns("Provide value");
+        pageMock.Raise(p => p.Dialog += null!, dialogMock.Object);
+
+        var markdown = tab.GetModalStatesMarkdown();
+
+        Assert.Collection(markdown,
+            line => Assert.Equal("### Modal state", line),
+            line => Assert.Equal("- [\"prompt\" dialog with message \"Provide value\"]: can be handled by the \"browser_handle_dialog\" tool", line));
 
         tab.Dispose();
     }

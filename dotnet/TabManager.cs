@@ -271,6 +271,27 @@ internal sealed class TabState : IDisposable
 
     internal readonly record struct RefLocatorRequest(string ElementDescription, string Reference);
 
+    internal async Task UpdateTitleAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string? title = null;
+        var modalStates = await RaceAgainstModalStatesAsync(async _ =>
+        {
+            title = await Page.TitleAsync().ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
+
+        if (modalStates.Count > 0 || title is null)
+        {
+            return;
+        }
+
+        lock (_gate)
+        {
+            Title = title;
+        }
+    }
+
     public void AttachHandlers()
     {
         Page.Console += _consoleHandler;

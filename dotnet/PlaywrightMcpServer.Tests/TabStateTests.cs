@@ -53,6 +53,25 @@ public class TabStateTests
         Assert.Contains("Capture a new snapshot", exception.Message);
     }
 
+    [Fact]
+    public async Task CaptureSnapshotAsync_UpdatesMetadata()
+    {
+        var pageMock = new Mock<IPage>();
+        pageMock.Setup(p => p.TitleAsync()).ReturnsAsync("Snapshot Title");
+        pageMock.SetupGet(p => p.Url).Returns("https://example.com/");
+
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+        var snapshotManager = new SnapshotManager();
+
+        var snapshot = await tab.CaptureSnapshotAsync(snapshotManager, CancellationToken.None).ConfigureAwait(false);
+
+        Assert.Equal("https://example.com/", tab.Url);
+        Assert.Equal("Snapshot Title", tab.Title);
+        Assert.Same(snapshot, tab.LastSnapshot);
+        Assert.Equal("Snapshot Title", snapshot.Title);
+        Assert.Equal("https://example.com/", snapshot.Url);
+    }
+
     private static Mock<IPage> CreatePageMock(string snapshot, out Dictionary<string, Mock<ILocator>> locatorMap)
     {
         locatorMap = new Dictionary<string, Mock<ILocator>>(StringComparer.Ordinal)

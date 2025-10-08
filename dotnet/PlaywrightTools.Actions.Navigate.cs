@@ -33,10 +33,10 @@ public sealed partial class PlaywrightTools
             async (response, token) =>
             {
                 var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
-                var navigationResponse = await tab.Page.GotoAsync(normalizedUrl, new PageGotoOptions
+                var navigationResponse = await tab.NavigateAsync(normalizedUrl, new PageGotoOptions
                 {
                     WaitUntil = WaitUntilState.NetworkIdle
-                }).ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
 
                 var resultLines = new List<string>
                 {

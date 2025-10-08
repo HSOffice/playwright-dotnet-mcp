@@ -36,10 +36,10 @@ public sealed partial class PlaywrightTools
             var first = restorePlan[0];
             if (!string.IsNullOrWhiteSpace(first.Url))
             {
-                await activeTab.Page.GotoAsync(first.Url, new PageGotoOptions
+                await activeTab.NavigateAsync(first.Url, new PageGotoOptions
                 {
                     WaitUntil = WaitUntilState.NetworkIdle
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
                 initialSnapshot = await SnapshotManager.CaptureAsync(activeTab, cancellationToken).ConfigureAwait(false);
             }
 
@@ -51,10 +51,10 @@ public sealed partial class PlaywrightTools
                 var tab = TabManager.Register(page, makeActive: false);
                 if (!string.IsNullOrWhiteSpace(entry.Url))
                 {
-                    await page.GotoAsync(entry.Url, new PageGotoOptions
+                    await tab.NavigateAsync(entry.Url, new PageGotoOptions
                     {
                         WaitUntil = WaitUntilState.NetworkIdle
-                    }).ConfigureAwait(false);
+                    }, cancellationToken).ConfigureAwait(false);
                     await SnapshotManager.CaptureAsync(tab, cancellationToken).ConfigureAwait(false);
                 }
             }

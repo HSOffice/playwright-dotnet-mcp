@@ -1,6 +1,4 @@
-using Microsoft.Playwright;
 using ModelContextProtocol.Server;
-using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,30 +20,20 @@ public sealed partial class PlaywrightTools
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // 复用已有的页面获取逻辑（项目中已实现）
-        var page = await GetPageAsync(cancellationToken).ConfigureAwait(false);
-
-        string? ariaYaml = null;
-        try
-        {
-            // ✅ 推荐：使用 ARIA Snapshot（Playwright .NET v1.49+）
-            // 抓取整个页面（body）的可访问性树，以 YAML 表示，适合 LLM 消化与匹配。
-            ariaYaml = await page.Locator("body").AriaSnapshotAsync().ConfigureAwait(false);
-
-        }
-        catch (PlaywrightException)
-        {
-            // 与 TS 管线一致：不要因为可访问性快照失败而让工具报错，继续返回基本信息。
-            ariaYaml ??= null;
-        }
+        var tab = await GetActiveTabAsync(cancellationToken).ConfigureAwait(false);
+        var snapshot = await tab.CaptureSnapshotAsync(SnapshotManager, cancellationToken).ConfigureAwait(false);
 
         var payload = new
         {
             includeSnapshot = true,
-            url = page.Url,
-            title = await page.TitleAsync().ConfigureAwait(false),
-            // ARIA 快照（YAML）。配合 ToMatchAriaSnapshot 等断言非常方便。
-            ariaSnapshot = ariaYaml
+            url = snapshot.Url,
+            title = snapshot.Title,
+            ariaSnapshot = snapshot.Aria,
+            modalStates = snapshot.ModalStates,
+            consoleMessages = snapshot.Console,
+            networkRequests = snapshot.Network,
+            downloads = snapshot.Downloads,
+            timestamp = snapshot.Timestamp
         };
 
         return Serialize(payload);

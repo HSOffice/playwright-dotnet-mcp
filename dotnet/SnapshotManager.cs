@@ -17,14 +17,11 @@ internal sealed class SnapshotManager
         JsonElement? aria = null;
         try
         {
-            var snapshot = await page.Accessibility.SnapshotAsync(new AccessibilitySnapshotOptions
-            {
-                InterestingOnly = false
-            }).ConfigureAwait(false);
+            var accessibilitySnapshot = await GetAccessibilitySnapshotAsync(page, cancellationToken).ConfigureAwait(false);
 
-            if (snapshot is not null)
+            if (accessibilitySnapshot is not null)
             {
-                aria = JsonSerializer.SerializeToElement(snapshot, snapshot.GetType());
+                aria = JsonSerializer.SerializeToElement(accessibilitySnapshot, accessibilitySnapshot.GetType());
             }
         }
         catch (PlaywrightException)
@@ -36,7 +33,7 @@ internal sealed class SnapshotManager
         var url = page.Url ?? string.Empty;
         var (console, network) = tab.TakeActivitySnapshot();
 
-        var snapshot = new SnapshotPayload
+        var snapshotPayload = new SnapshotPayload
         {
             Timestamp = DateTimeOffset.UtcNow,
             Url = url,
@@ -47,8 +44,8 @@ internal sealed class SnapshotManager
             ModalStates = tab.GetModalStatesSnapshot()
         };
 
-        tab.UpdateMetadata(url, title, snapshot);
-        return snapshot;
+        tab.UpdateMetadata(url, title, snapshotPayload);
+        return snapshotPayload;
     }
 
     private static async Task<object?> GetAccessibilitySnapshotAsync(IPage page, CancellationToken cancellationToken)

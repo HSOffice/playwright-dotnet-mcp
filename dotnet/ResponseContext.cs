@@ -26,5 +26,5 @@ public sealed class ResponseContext
     public IReadOnlyList<TabDescriptor> DescribeTabs() => _tabManager.DescribeTabs();
 
     internal Task<SnapshotPayload> CaptureSnapshotAsync(TabState tab, CancellationToken cancellationToken)
-        => _snapshotManager.CaptureAsync(tab, cancellationToken);
+        => tab.CaptureSnapshotAsync(_snapshotManager, cancellationToken);
 }

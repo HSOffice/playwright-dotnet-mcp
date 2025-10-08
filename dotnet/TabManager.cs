@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
@@ -148,6 +150,8 @@ internal sealed class TabState : IDisposable
     private readonly List<ConsoleMessageEntry> _consoleMessages = new();
     private readonly List<NetworkRequestEntry> _networkRequests = new();
     private readonly Dictionary<IRequest, NetworkRequestEntry> _requestMap = new(new ReferenceEqualityComparer<IRequest>());
+    private readonly List<ModalStateEntry> _modalStates = new();
+    private readonly List<TaskCompletionSource<IReadOnlyList<ModalStateEntry>>> _modalStateWaiters = new();
     private readonly Action<TabState> _onClosed;
 
     private readonly EventHandler<IConsoleMessage> _consoleHandler;
@@ -155,6 +159,8 @@ internal sealed class TabState : IDisposable
     private readonly EventHandler<IResponse> _responseHandler;
     private readonly EventHandler<IRequest> _requestFailedHandler;
     private readonly EventHandler<IPage> _closeHandler;
+    private readonly EventHandler<IDialog> _dialogHandler;
+    private readonly EventHandler<IFileChooser> _fileChooserHandler;
 
     public TabState(IPage page, string id, DateTimeOffset createdAt, Action<TabState> onClosed)
     {
@@ -233,6 +239,8 @@ internal sealed class TabState : IDisposable
         };
 
         _closeHandler = (_, _) => _onClosed(this);
+        _dialogHandler = (_, dialog) => OnDialog(dialog);
+        _fileChooserHandler = (_, chooser) => OnFileChooser(chooser);
     }
 
     public string Id { get; }
@@ -249,6 +257,8 @@ internal sealed class TabState : IDisposable
         Page.Response += _responseHandler;
         Page.RequestFailed += _requestFailedHandler;
         Page.Close += _closeHandler;
+        Page.Dialog += _dialogHandler;
+        Page.FileChooser += _fileChooserHandler;
         Url = Page.Url;
     }
 
@@ -259,6 +269,8 @@ internal sealed class TabState : IDisposable
         Page.Response -= _responseHandler;
         Page.RequestFailed -= _requestFailedHandler;
         Page.Close -= _closeHandler;
+        Page.Dialog -= _dialogHandler;
+        Page.FileChooser -= _fileChooserHandler;
     }
 
     public (IReadOnlyList<ConsoleMessageEntry> console, IReadOnlyList<NetworkRequestEntry> network) TakeActivitySnapshot()
@@ -281,6 +293,53 @@ internal sealed class TabState : IDisposable
         }
     }
 
+    internal IReadOnlyList<ModalStateEntry> GetModalStatesSnapshot()
+    {
+        lock (_gate)
+        {
+            return _modalStates.Count == 0
+                ? Array.Empty<ModalStateEntry>()
+                : _modalStates.ToArray();
+        }
+    }
+
+    internal async Task<SnapshotPayload> CaptureSnapshotAsync(SnapshotManager snapshotManager, CancellationToken cancellationToken)
+    {
+        if (snapshotManager is null)
+        {
+            throw new ArgumentNullException(nameof(snapshotManager));
+        }
+
+        SnapshotPayload? snapshot = null;
+        var modalStates = await RaceAgainstModalStatesAsync(async ct =>
+        {
+            snapshot = await snapshotManager.CaptureAsync(this, ct).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
+
+        if (snapshot is not null)
+        {
+            return snapshot with
+            {
+                ModalStates = GetModalStatesSnapshot()
+            };
+        }
+
+        var fallbackStates = modalStates.Count == 0
+            ? GetModalStatesSnapshot()
+            : modalStates;
+
+        return new SnapshotPayload
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Url = Page.Url ?? string.Empty,
+            Title = string.Empty,
+            Aria = null,
+            Console = Array.Empty<ConsoleMessageEntry>(),
+            Network = Array.Empty<NetworkRequestEntry>(),
+            ModalStates = fallbackStates.Count == 0 ? Array.Empty<ModalStateEntry>() : fallbackStates
+        };
+    }
+
     public TabDescriptor ToDescriptor(bool isActive)
     {
         lock (_gate)
@@ -293,6 +352,144 @@ internal sealed class TabState : IDisposable
                 IsActive = isActive,
                 CreatedAt = CreatedAt
             };
+        }
+    }
+
+    private async Task<IReadOnlyList<ModalStateEntry>> RaceAgainstModalStatesAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        TaskCompletionSource<IReadOnlyList<ModalStateEntry>>? waiter;
+        lock (_gate)
+        {
+            if (_modalStates.Count > 0)
+            {
+                return _modalStates.ToArray();
+            }
+
+            waiter = new TaskCompletionSource<IReadOnlyList<ModalStateEntry>>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _modalStateWaiters.Add(waiter);
+        }
+
+        using var registration = cancellationToken.Register(state =>
+        {
+            var source = (TaskCompletionSource<IReadOnlyList<ModalStateEntry>>)state!;
+            source.TrySetCanceled(cancellationToken);
+        }, waiter);
+
+        try
+        {
+            var operationTask = action(cancellationToken);
+            var completedTask = await Task.WhenAny(operationTask, waiter!.Task).ConfigureAwait(false);
+            if (ReferenceEquals(completedTask, operationTask))
+            {
+                await operationTask.ConfigureAwait(false);
+                return Array.Empty<ModalStateEntry>();
+            }
+
+            return await waiter.Task.ConfigureAwait(false);
+        }
+        finally
+        {
+            lock (_gate)
+            {
+                _modalStateWaiters.Remove(waiter!);
+            }
+        }
+    }
+
+    private void OnDialog(IDialog dialog)
+    {
+        if (dialog is null)
+        {
+            return;
+        }
+
+        var entry = new ModalStateEntry
+        {
+            Type = "dialog",
+            Description = $"\"{dialog.Type ?? string.Empty}\" dialog with message \"{dialog.Message ?? string.Empty}\"",
+            ClearedBy = "browser_handle_dialog",
+            Dialog = dialog
+        };
+
+        PushModalState(entry);
+        ObserveModalResolution(dialog, entry);
+    }
+
+    private void OnFileChooser(IFileChooser chooser)
+    {
+        if (chooser is null)
+        {
+            return;
+        }
+
+        var entry = new ModalStateEntry
+        {
+            Type = "fileChooser",
+            Description = "File chooser",
+            ClearedBy = "browser_file_upload",
+            FileChooser = chooser
+        };
+
+        PushModalState(entry);
+        ObserveModalResolution(chooser, entry);
+    }
+
+    private void PushModalState(ModalStateEntry entry)
+    {
+        TaskCompletionSource<IReadOnlyList<ModalStateEntry>>[] waiters;
+        IReadOnlyList<ModalStateEntry> snapshot;
+        lock (_gate)
+        {
+            _modalStates.Add(entry);
+            snapshot = _modalStates.ToArray();
+            waiters = _modalStateWaiters.ToArray();
+            _modalStateWaiters.Clear();
+        }
+
+        foreach (var waiter in waiters)
+        {
+            waiter.TrySetResult(snapshot);
+        }
+    }
+
+    private void ClearModalState(ModalStateEntry entry)
+    {
+        lock (_gate)
+        {
+            _modalStates.Remove(entry);
+        }
+    }
+
+    private void ObserveModalResolution(object modal, ModalStateEntry entry)
+    {
+        if (modal is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var waitForClose = modal.GetType().GetMethod("WaitForCloseAsync", Type.EmptyTypes);
+            if (waitForClose?.Invoke(modal, Array.Empty<object>()) is Task task)
+            {
+                _ = task.ContinueWith(
+                    static (_, state) =>
+                    {
+                        var (tab, modalEntry) = ((TabState tab, ModalStateEntry entry))state!;
+                        tab.ClearModalState(modalEntry);
+                    },
+                    (this, entry),
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+        }
+        catch
+        {
+            // Swallow reflection failures; modal state can still be cleared manually by tools.
         }
     }
 }

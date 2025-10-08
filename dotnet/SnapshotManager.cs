@@ -43,7 +43,8 @@ internal sealed class SnapshotManager
             Title = title,
             Aria = aria,
             Console = console,
-            Network = network
+            Network = network,
+            ModalStates = tab.GetModalStatesSnapshot()
         };
 
         tab.UpdateMetadata(url, title, snapshot);

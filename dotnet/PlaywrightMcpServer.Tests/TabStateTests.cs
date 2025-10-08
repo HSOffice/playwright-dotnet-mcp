@@ -72,6 +72,57 @@ public class TabStateTests
         Assert.Equal("https://example.com/", snapshot.Url);
     }
 
+    [Fact]
+    public void GetConsoleMessages_ReturnsAllMessages()
+    {
+        var (tab, pageMock, consoleHandler) = CreateTabWithConsoleCapture();
+        var handler = Assert.NotNull(consoleHandler);
+
+        var infoMessage = CreateConsoleMessage("log", "info message");
+        var errorMessage = CreateConsoleMessage("error", "error message");
+
+        handler(pageMock.Object, infoMessage.Object);
+        handler(pageMock.Object, errorMessage.Object);
+
+        var messages = tab.GetConsoleMessages(onlyErrors: false);
+
+        Assert.Equal(2, messages.Count);
+        Assert.Collection(messages,
+            message =>
+            {
+                Assert.Equal("log", message.Type);
+                Assert.Equal("info message", message.Text);
+            },
+            message =>
+            {
+                Assert.Equal("error", message.Type);
+                Assert.Equal("error message", message.Text);
+            });
+
+        tab.Dispose();
+    }
+
+    [Fact]
+    public void GetConsoleMessages_ReturnsOnlyErrors()
+    {
+        var (tab, pageMock, consoleHandler) = CreateTabWithConsoleCapture();
+        var handler = Assert.NotNull(consoleHandler);
+
+        var infoMessage = CreateConsoleMessage("log", "info message");
+        var errorMessage = CreateConsoleMessage("error", "error message");
+
+        handler(pageMock.Object, infoMessage.Object);
+        handler(pageMock.Object, errorMessage.Object);
+
+        var messages = tab.GetConsoleMessages(onlyErrors: true);
+
+        var message = Assert.Single(messages);
+        Assert.Equal("error", message.Type);
+        Assert.Equal("error message", message.Text);
+
+        tab.Dispose();
+    }
+
     private static Mock<IPage> CreatePageMock(string snapshot, out Dictionary<string, Mock<ILocator>> locatorMap)
     {
         locatorMap = new Dictionary<string, Mock<ILocator>>(StringComparer.Ordinal)
@@ -102,6 +153,48 @@ public class TabStateTests
         var locatorMock = new Mock<ILocator>(MockBehavior.Strict);
         locatorMock.As<IDescribableLocator>().Setup(l => l.Describe(It.IsAny<string>())).Returns(locatorMock.Object);
         return locatorMock;
+    }
+
+    private static (TabState Tab, Mock<IPage> PageMock, EventHandler<IConsoleMessage>? ConsoleHandler) CreateTabWithConsoleCapture()
+    {
+        var pageMock = new Mock<IPage>(MockBehavior.Strict);
+        pageMock.SetupGet(p => p.Url).Returns("https://example.com/");
+        pageMock.Setup(p => p.TitleAsync()).ReturnsAsync("Example");
+
+        EventHandler<IConsoleMessage>? consoleHandler = null;
+        pageMock.SetupAdd(p => p.Console += It.IsAny<EventHandler<IConsoleMessage>>())
+            .Callback<EventHandler<IConsoleMessage>>(handler => consoleHandler += handler);
+        pageMock.SetupRemove(p => p.Console -= It.IsAny<EventHandler<IConsoleMessage>>())
+            .Callback<EventHandler<IConsoleMessage>>(handler => consoleHandler -= handler);
+
+        pageMock.SetupAdd(p => p.Request += It.IsAny<EventHandler<IRequest>>());
+        pageMock.SetupRemove(p => p.Request -= It.IsAny<EventHandler<IRequest>>());
+        pageMock.SetupAdd(p => p.Response += It.IsAny<EventHandler<IResponse>>());
+        pageMock.SetupRemove(p => p.Response -= It.IsAny<EventHandler<IResponse>>());
+        pageMock.SetupAdd(p => p.RequestFailed += It.IsAny<EventHandler<IRequest>>());
+        pageMock.SetupRemove(p => p.RequestFailed -= It.IsAny<EventHandler<IRequest>>());
+        pageMock.SetupAdd(p => p.Close += It.IsAny<EventHandler<IPage>>());
+        pageMock.SetupRemove(p => p.Close -= It.IsAny<EventHandler<IPage>>());
+        pageMock.SetupAdd(p => p.Dialog += It.IsAny<EventHandler<IDialog>>());
+        pageMock.SetupRemove(p => p.Dialog -= It.IsAny<EventHandler<IDialog>>());
+        pageMock.SetupAdd(p => p.FileChooser += It.IsAny<EventHandler<IFileChooser>>());
+        pageMock.SetupRemove(p => p.FileChooser -= It.IsAny<EventHandler<IFileChooser>>());
+        pageMock.SetupAdd(p => p.Download += It.IsAny<EventHandler<IDownload>>());
+        pageMock.SetupRemove(p => p.Download -= It.IsAny<EventHandler<IDownload>>());
+
+        var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
+        tab.AttachHandlers();
+
+        return (tab, pageMock, consoleHandler);
+    }
+
+    private static Mock<IConsoleMessage> CreateConsoleMessage(string type, string text)
+    {
+        var message = new Mock<IConsoleMessage>(MockBehavior.Strict);
+        message.SetupGet(m => m.Type).Returns(type);
+        message.SetupGet(m => m.Text).Returns(text);
+        message.Setup(m => m.Args).Returns(Array.Empty<IJSHandle>());
+        return message;
     }
 
     private interface IPageSnapshotForAi

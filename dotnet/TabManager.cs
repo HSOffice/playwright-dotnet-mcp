@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -267,6 +269,8 @@ internal sealed class TabState : IDisposable
     public string? Url { get; private set; }
     public SnapshotPayload? LastSnapshot { get; private set; }
 
+    internal readonly record struct RefLocatorRequest(string ElementDescription, string Reference);
+
     public void AttachHandlers()
     {
         Page.Console += _consoleHandler;
@@ -357,6 +361,187 @@ internal sealed class TabState : IDisposable
             Title = title;
             LastSnapshot = snapshot;
         }
+    }
+
+    internal async Task<ILocator> GetLocatorByRefAsync(string elementDescription, string reference, CancellationToken cancellationToken)
+    {
+        var requests = new[] { new RefLocatorRequest(elementDescription, reference) };
+        var locators = await GetLocatorsByRefCoreAsync(requests, cancellationToken).ConfigureAwait(false);
+        return locators[0];
+    }
+
+    internal async Task<ILocator> GetLocatorByRefAsync(RefLocatorRequest request, CancellationToken cancellationToken)
+    {
+        var requests = new[] { request };
+        var locators = await GetLocatorsByRefCoreAsync(requests, cancellationToken).ConfigureAwait(false);
+        return locators[0];
+    }
+
+    internal Task<IReadOnlyList<ILocator>> GetLocatorsByRefAsync(IReadOnlyList<RefLocatorRequest> requests, CancellationToken cancellationToken)
+        => GetLocatorsByRefCoreAsync(requests, cancellationToken);
+
+    private async Task<IReadOnlyList<ILocator>> GetLocatorsByRefCoreAsync(IReadOnlyList<RefLocatorRequest> requests, CancellationToken cancellationToken)
+    {
+        if (requests is null)
+        {
+            throw new ArgumentNullException(nameof(requests));
+        }
+
+        if (requests.Count == 0)
+        {
+            return Array.Empty<ILocator>();
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var snapshotMarkup = await GetSnapshotMarkupAsync(cancellationToken).ConfigureAwait(false);
+
+        var missing = requests
+            .Where(request => string.IsNullOrWhiteSpace(request.Reference) || !SnapshotContainsReference(snapshotMarkup, request.Reference))
+            .Select(request => request.Reference)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (missing.Length > 0)
+        {
+            var prefix = missing.Length == 1 ? "Ref" : "Refs";
+            var formatted = string.Join(", ", missing.Select(reference => $"'{reference}'"));
+            throw new InvalidOperationException($"{prefix} {formatted} not found in the current page snapshot. Capture a new snapshot and try again.");
+        }
+
+        var result = new ILocator[requests.Count];
+        for (var i = 0; i < requests.Count; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var request = requests[i];
+            var locator = Page.Locator($"aria-ref={request.Reference}");
+            result[i] = DescribeLocator(locator, request.ElementDescription);
+        }
+
+        return result;
+    }
+
+    private async Task<string> GetSnapshotMarkupAsync(CancellationToken cancellationToken)
+    {
+        var page = Page;
+        var markup = await TryInvokeSnapshotForAiAsync(page, cancellationToken).ConfigureAwait(false);
+        if (!string.IsNullOrEmpty(markup))
+        {
+            return markup;
+        }
+
+        if (LastSnapshot?.Aria is JsonElement aria)
+        {
+            var raw = aria.GetRawText();
+            if (!string.IsNullOrEmpty(raw))
+            {
+                return raw;
+            }
+        }
+
+        var snapshotManager = new SnapshotManager();
+        var snapshot = await snapshotManager.CaptureAsync(this, cancellationToken).ConfigureAwait(false);
+        if (snapshot.Aria is JsonElement capture)
+        {
+            var raw = capture.GetRawText();
+            if (!string.IsNullOrEmpty(raw))
+            {
+                return raw;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static async Task<string?> TryInvokeSnapshotForAiAsync(IPage page, CancellationToken cancellationToken)
+    {
+        var pageType = page.GetType();
+        var methods = new[]
+        {
+            pageType.GetMethod("_SnapshotForAIAsync", Type.EmptyTypes),
+            pageType.GetMethod("SnapshotForAIAsync", Type.EmptyTypes),
+            pageType.GetMethod("_SnapshotForAIAsync", new[] { typeof(CancellationToken) }),
+            pageType.GetMethod("SnapshotForAIAsync", new[] { typeof(CancellationToken) })
+        };
+
+        foreach (var method in methods)
+        {
+            if (method is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                var parameters = method.GetParameters().Length == 0
+                    ? Array.Empty<object?>()
+                    : new object?[] { cancellationToken };
+
+                var invokeResult = method.Invoke(page, parameters);
+                if (invokeResult is Task<string> stringTask)
+                {
+                    return await stringTask.ConfigureAwait(false);
+                }
+
+                if (invokeResult is Task task)
+                {
+                    await task.ConfigureAwait(false);
+                    var resultProperty = task.GetType().GetProperty("Result", BindingFlags.Public | BindingFlags.Instance);
+                    if (resultProperty?.GetValue(task) is string text)
+                    {
+                        return text;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore and fall back to snapshot manager / cached snapshot.
+            }
+        }
+
+        return null;
+    }
+
+    private static bool SnapshotContainsReference(string snapshotMarkup, string reference)
+    {
+        if (string.IsNullOrEmpty(reference) || string.IsNullOrEmpty(snapshotMarkup))
+        {
+            return false;
+        }
+
+        var token = $"[ref={reference}]";
+        return snapshotMarkup.Contains(token, StringComparison.Ordinal);
+    }
+
+    private static ILocator DescribeLocator(ILocator locator, string elementDescription)
+    {
+        if (locator is null)
+        {
+            throw new ArgumentNullException(nameof(locator));
+        }
+
+        if (string.IsNullOrWhiteSpace(elementDescription))
+        {
+            return locator;
+        }
+
+        try
+        {
+            var method = locator.GetType().GetMethod("Describe", new[] { typeof(string) });
+            if (method is not null)
+            {
+                var described = method.Invoke(locator, new object?[] { elementDescription }) as ILocator;
+                if (described is not null)
+                {
+                    return described;
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return locator;
     }
 
     public async Task WaitForCompletionAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,11 +40,11 @@ public sealed partial class PlaywrightTools
                 }
 
                 var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
-                var page = tab.Page;
                 var updates = new List<string>();
 
                 await tab.WaitForCompletionAsync(async ct =>
                 {
+                    var preparedFields = new List<(BrowserFillFormField Field, BrowserFillFormFieldType Type)>();
                     foreach (var field in request.Fields)
                     {
                         ct.ThrowIfCancellationRequested();
@@ -64,7 +65,26 @@ public sealed partial class PlaywrightTools
                             throw new ArgumentException($"Unsupported field type '{field.Type}'.");
                         }
 
-                        var locator = page.Locator($"aria-ref={field.Reference}");
+                        preparedFields.Add((field, normalizedType));
+                    }
+
+                    if (preparedFields.Count == 0)
+                    {
+                        return;
+                    }
+
+                    var locatorRequests = preparedFields
+                        .Select(tuple => new TabState.RefLocatorRequest(DescribeField(tuple.Field), tuple.Field.Reference))
+                        .ToArray();
+
+                    var locators = await tab.GetLocatorsByRefAsync(locatorRequests, ct).ConfigureAwait(false);
+
+                    for (var i = 0; i < preparedFields.Count; i++)
+                    {
+                        ct.ThrowIfCancellationRequested();
+
+                        var (field, normalizedType) = preparedFields[i];
+                        var locator = locators[i];
                         var locatorSource = $"await page.locator({QuoteJsString($"aria-ref={field.Reference}")})";
 
                         try

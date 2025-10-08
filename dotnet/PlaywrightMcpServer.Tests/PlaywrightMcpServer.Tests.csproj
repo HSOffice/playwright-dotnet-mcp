@@ -8,9 +8,18 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="xunit" Version="2.5.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.41.2" />
+    <PackageReference Include="Moq" Version="4.20.70" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../BrowserModels.cs" />
+    <Compile Include="../Response.cs" />
+    <Compile Include="../ResponseConfiguration.cs" />
+    <Compile Include="../ResponseContent.cs" />
+    <Compile Include="../ResponseContext.cs" />
+    <Compile Include="../SecretRedactor.cs" />
     <Compile Include="../SnapshotMarkdownBuilder.cs" />
+    <Compile Include="../SnapshotManager.cs" />
+    <Compile Include="../TabManager.cs" />
   </ItemGroup>
 </Project>

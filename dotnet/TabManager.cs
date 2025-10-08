@@ -153,6 +153,7 @@ internal sealed class TabState : IDisposable
     private readonly List<ModalStateEntry> _modalStates = new();
     private readonly List<DownloadEntry> _downloads = new();
     private readonly List<TaskCompletionSource<IReadOnlyList<ModalStateEntry>>> _modalStateWaiters = new();
+    private readonly List<TaskCompletionSource<bool>> _downloadWaiters = new();
     private readonly Action<TabState> _onClosed;
 
     private readonly EventHandler<IConsoleMessage> _consoleHandler;
@@ -243,7 +244,20 @@ internal sealed class TabState : IDisposable
         _closeHandler = (_, _) => _onClosed(this);
         _dialogHandler = (_, dialog) => OnDialog(dialog);
         _fileChooserHandler = (_, chooser) => OnFileChooser(chooser);
-        _downloadHandler = (_, download) => _ = HandleDownloadAsync(download);
+        _downloadHandler = (_, download) =>
+        {
+            lock (_gate)
+            {
+                foreach (var waiter in _downloadWaiters.ToArray())
+                {
+                    waiter.TrySetResult(true);
+                }
+
+                _downloadWaiters.Clear();
+            }
+
+            _ = HandleDownloadAsync(download);
+        };
     }
 
     public string Id { get; }
@@ -276,6 +290,53 @@ internal sealed class TabState : IDisposable
         Page.Dialog -= _dialogHandler;
         Page.FileChooser -= _fileChooserHandler;
         Page.Download -= _downloadHandler;
+        CancelDownloadWaiters();
+    }
+
+    internal async Task<IResponse?> NavigateAsync(string url, PageGotoOptions? options, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(url);
+
+        options ??= new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.DOMContentLoaded
+        };
+
+        ClearActivityQueues();
+
+        using var downloadCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var downloadSignalTask = WaitForDownloadSignalAsync(downloadCancellation.Token);
+
+        try
+        {
+            var response = await Page.GotoAsync(url, options).ConfigureAwait(false);
+            downloadCancellation.Cancel();
+
+            await WaitForLoadStateWithTimeoutAsync().ConfigureAwait(false);
+            return response;
+        }
+        catch (PlaywrightException ex) when (IsDownloadNavigationException(ex))
+        {
+            var completedTask = await Task.WhenAny(downloadSignalTask, Task.Delay(TimeSpan.FromSeconds(3), cancellationToken)).ConfigureAwait(false);
+            if (ReferenceEquals(completedTask, downloadSignalTask) && await downloadSignalTask.ConfigureAwait(false))
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(false);
+                return null;
+            }
+
+            throw;
+        }
+        finally
+        {
+            downloadCancellation.Cancel();
+            try
+            {
+                await downloadSignalTask.ConfigureAwait(false);
+            }
+            catch
+            {
+            }
+        }
     }
 
     public (IReadOnlyList<ConsoleMessageEntry> console, IReadOnlyList<NetworkRequestEntry> network) TakeActivitySnapshot()
@@ -295,6 +356,16 @@ internal sealed class TabState : IDisposable
             Url = url;
             Title = title;
             LastSnapshot = snapshot;
+        }
+    }
+
+    private void ClearActivityQueues()
+    {
+        lock (_gate)
+        {
+            _consoleMessages.Clear();
+            _networkRequests.Clear();
+            _requestMap.Clear();
         }
     }
 
@@ -412,6 +483,82 @@ internal sealed class TabState : IDisposable
             }
         }
     }
+
+    private async Task<bool> WaitForDownloadSignalAsync(CancellationToken cancellationToken)
+    {
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenRegistration registration = default;
+
+        lock (_gate)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                tcs.TrySetResult(false);
+                return tcs.Task;
+            }
+
+            _downloadWaiters.Add(tcs);
+            registration = cancellationToken.Register(static state =>
+            {
+                var self = (TabState)state!;
+                self.CancelDownloadWaiters();
+            }, this);
+        }
+
+        try
+        {
+            return await tcs.Task.ConfigureAwait(false);
+        }
+        finally
+        {
+            registration.Dispose();
+        }
+    }
+
+    private void CancelDownloadWaiters()
+    {
+        lock (_gate)
+        {
+            if (_downloadWaiters.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var waiter in _downloadWaiters)
+            {
+                waiter.TrySetResult(false);
+            }
+
+            _downloadWaiters.Clear();
+        }
+    }
+
+    private async Task WaitForLoadStateWithTimeoutAsync()
+    {
+        try
+        {
+            await Page.WaitForLoadStateAsync(LoadState.Load, new PageWaitForLoadStateOptions
+            {
+                Timeout = 5000
+            }).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+        }
+        catch (PlaywrightException ex) when (IsTimeoutException(ex))
+        {
+        }
+    }
+
+    private static bool IsDownloadNavigationException(PlaywrightException exception)
+    {
+        var message = exception.Message ?? string.Empty;
+        return message.Contains("net::ERR_ABORTED", StringComparison.Ordinal)
+               || message.Contains("Download is starting", StringComparison.Ordinal);
+    }
+
+    private static bool IsTimeoutException(PlaywrightException exception)
+        => (exception.Message ?? string.Empty).Contains("Timeout", StringComparison.OrdinalIgnoreCase);
 
     private async Task<IReadOnlyList<ModalStateEntry>> RaceAgainstModalStatesAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
     {

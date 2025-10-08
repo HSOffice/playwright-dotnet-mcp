@@ -150,6 +150,7 @@ internal sealed class TabState : IDisposable
 {
     private readonly object _gate = new();
     private readonly List<ConsoleMessageEntry> _consoleMessages = new();
+    private readonly List<ConsoleMessageEntry> _recentConsoleMessages = new();
     private readonly List<NetworkRequestEntry> _networkRequests = new();
     private readonly Dictionary<IRequest, NetworkRequestEntry> _requestMap = new(new ReferenceEqualityComparer<IRequest>());
     private readonly List<ModalStateEntry> _modalStates = new();
@@ -187,9 +188,15 @@ internal sealed class TabState : IDisposable
             lock (_gate)
             {
                 _consoleMessages.Add(entry);
+                _recentConsoleMessages.Add(entry);
                 if (_consoleMessages.Count > 200)
                 {
                     _consoleMessages.RemoveAt(0);
+                }
+
+                if (_recentConsoleMessages.Count > 200)
+                {
+                    _recentConsoleMessages.RemoveAt(0);
                 }
             }
         };
@@ -368,9 +375,40 @@ internal sealed class TabState : IDisposable
     {
         lock (_gate)
         {
+            IReadOnlyList<ConsoleMessageEntry> consoleSnapshot;
+            if (_recentConsoleMessages.Count == 0)
+            {
+                consoleSnapshot = Array.Empty<ConsoleMessageEntry>();
+            }
+            else
+            {
+                consoleSnapshot = _recentConsoleMessages.ToArray();
+                _recentConsoleMessages.Clear();
+            }
+
             return (
-                _consoleMessages.ToArray(),
+                consoleSnapshot,
                 _networkRequests.Select(entry => entry.Clone()).ToArray());
+        }
+    }
+
+    public IReadOnlyList<ConsoleMessageEntry> GetConsoleMessages(bool onlyErrors)
+    {
+        lock (_gate)
+        {
+            if (_consoleMessages.Count == 0)
+            {
+                return Array.Empty<ConsoleMessageEntry>();
+            }
+
+            if (!onlyErrors)
+            {
+                return _consoleMessages.ToArray();
+            }
+
+            return _consoleMessages
+                .Where(static entry => string.Equals(entry.Type, "error", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
         }
     }
 
@@ -580,6 +618,7 @@ internal sealed class TabState : IDisposable
         lock (_gate)
         {
             _consoleMessages.Clear();
+            _recentConsoleMessages.Clear();
             _networkRequests.Clear();
             _requestMap.Clear();
         }

@@ -8,25 +8,18 @@ public interface IResponseContent
     string Type { get; }
 }
 
-public sealed record TextContent(string Text) : IResponseContent
+public sealed record TextContent([property: JsonPropertyName("text")] string Text) : IResponseContent
 {
     [JsonPropertyName("type")]
     public string Type => "text";
-
-    [JsonPropertyName("text")]
-    public string TextValue => Text;
 }
 
-public sealed record ImageContent(string Data, string MimeType) : IResponseContent
+public sealed record ImageContent(
+    [property: JsonPropertyName("data")] string Data,
+    [property: JsonPropertyName("mimeType")] string MimeType) : IResponseContent
 {
     [JsonPropertyName("type")]
     public string Type => "image";
-
-    [JsonPropertyName("data")]
-    public string DataValue => Data;
-
-    [JsonPropertyName("mimeType")]
-    public string MimeTypeValue => MimeType;
 }
 
 public sealed record SerializedResponse(

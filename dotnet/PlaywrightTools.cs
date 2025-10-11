@@ -74,6 +74,19 @@ public sealed partial class PlaywrightTools
     private static string Serialize(Response response)
         => JsonSerializer.Serialize(response.Serialize(), JsonOptions);
 
+    private static string QuoteJsString(string? value)
+    {
+        value ??= string.Empty;
+
+        return "'" + value
+            .Replace("\\", "\\\\")
+            .Replace("\r", "\\r")
+            .Replace("\n", "\\n")
+            .Replace("\t", "\\t")
+            .Replace("'", "\\'")
+            + "'";
+    }
+
     private static async Task<string> ExecuteWithResponseAsync(
         string toolName,
         IReadOnlyDictionary<string, object?> args,

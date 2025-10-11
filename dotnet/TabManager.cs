@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -544,24 +543,16 @@ internal sealed class TabState : IDisposable
             return markup;
         }
 
-        if (LastSnapshot?.Aria is JsonElement aria)
+        if (!string.IsNullOrEmpty(LastSnapshot?.AriaSnapshot))
         {
-            var raw = aria.GetRawText();
-            if (!string.IsNullOrEmpty(raw))
-            {
-                return raw;
-            }
+            return LastSnapshot.AriaSnapshot!;
         }
 
         var snapshotManager = new SnapshotManager();
         var snapshot = await snapshotManager.CaptureAsync(this, cancellationToken).ConfigureAwait(false);
-        if (snapshot.Aria is JsonElement capture)
+        if (!string.IsNullOrEmpty(snapshot.AriaSnapshot))
         {
-            var raw = capture.GetRawText();
-            if (!string.IsNullOrEmpty(raw))
-            {
-                return raw;
-            }
+            return snapshot.AriaSnapshot!;
         }
 
         return string.Empty;
@@ -755,7 +746,7 @@ internal sealed class TabState : IDisposable
             Timestamp = DateTimeOffset.UtcNow,
             Url = Page.Url ?? string.Empty,
             Title = string.Empty,
-            Aria = null,
+            AriaSnapshot = null,
             Console = Array.Empty<ConsoleMessageEntry>(),
             Network = Array.Empty<NetworkRequestEntry>(),
             ModalStates = fallbackStates.Count == 0 ? Array.Empty<ModalStateEntry>() : fallbackStates,

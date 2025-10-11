@@ -14,7 +14,7 @@ public class SnapshotMarkdownBuilderTests
             Timestamp = DateTimeOffset.UtcNow,
             Url = "https://example.com",
             Title = "Example",
-            Aria = null,
+            AriaSnapshot = null,
             Console = Array.Empty<ConsoleMessageEntry>(),
             Network = Array.Empty<NetworkRequestEntry>(),
             ModalStates = Array.Empty<ModalStateEntry>(),

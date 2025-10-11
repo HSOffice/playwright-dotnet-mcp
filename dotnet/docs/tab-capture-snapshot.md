@@ -65,7 +65,7 @@ internal sealed class TabState
             Timestamp = DateTimeOffset.UtcNow,
             Url = Page.Url ?? string.Empty,
             Title = string.Empty,
-            Aria = null,
+            AriaSnapshot = null,
             Console = Array.Empty<ConsoleMessageEntry>(),
             Network = Array.Empty<NetworkRequestEntry>(),
             ModalStates = fallbackStates
@@ -74,4 +74,4 @@ internal sealed class TabState
 }
 ```
 
-The helper uses the public `SnapshotManager.CaptureAsync` API【F:dotnet/SnapshotManager.cs†L11-L47】, which in turn mirrors the TypeScript snapshot logic by reading the tab's Playwright page, serialising the accessibility tree, and persisting console/network metadata back onto the `TabState` instance.【F:dotnet/TabManager.cs†L207-L341】 The `RaceAgainstModalStatesAsync` helper mirrors the same modal handling that the TypeScript version performs before producing a fallback snapshot payload.
+The helper uses the public `SnapshotManager.CaptureAsync` API【F:dotnet/SnapshotManager.cs†L11-L83】, which now delegates to Playwright's `AriaSnapshotAsync`/`_SnapshotForAIAsync` entry points to capture the YAML-formatted accessibility snapshot while persisting console/network metadata back onto the `TabState` instance.【F:dotnet/TabManager.cs†L207-L341】 The `RaceAgainstModalStatesAsync` helper mirrors the same modal handling that the TypeScript version performs before producing a fallback snapshot payload.

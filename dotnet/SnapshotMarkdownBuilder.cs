@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 
 namespace PlaywrightMcpServer;
 
@@ -61,24 +60,16 @@ internal static class SnapshotMarkdownBuilder
         lines.Add($"- Page URL: {snapshot.Url}");
         lines.Add($"- Page Title: {snapshot.Title ?? string.Empty}");
         lines.Add("- Page Snapshot:");
-        lines.Add("```json");
-        lines.Add(omitSnapshot ? "<snapshot>" : Format(snapshot.Aria));
+        lines.Add("```yaml");
+        lines.Add(omitSnapshot ? "<snapshot>" : Format(snapshot.AriaSnapshot));
         lines.Add("```");
 
         return lines;
     }
 
-    private static string Format(JsonElement? element)
+    private static string Format(string? ariaSnapshot)
     {
-        if (element is null)
-        {
-            return "null";
-        }
-
-        return JsonSerializer.Serialize(element.Value, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
+        return string.IsNullOrWhiteSpace(ariaSnapshot) ? "null" : ariaSnapshot;
     }
 
     private static string Trim(string text, int maxLength)

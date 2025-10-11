@@ -203,12 +203,6 @@ public sealed partial class PlaywrightTools
         return TabManager.ActiveTab ?? throw new InvalidOperationException("Active tab not available.");
     }
 
-    private static async Task<IBrowserContext> GetContextAsync(CancellationToken cancellationToken)
-    {
-        await EnsureLaunchedAsync(cancellationToken).ConfigureAwait(false);
-        return _context ?? throw new InvalidOperationException("Browser context not initialized.");
-    }
-
     private static async Task<ILocator> GetLocatorAsync(
         string selector,
         int? timeoutMs,
@@ -236,23 +230,10 @@ public sealed partial class PlaywrightTools
         TabManager.Register(page, makeActive: false);
     }
 
-    public static SnapshotPayload? TryGetLastSnapshot()
-    {
-        return TabManager.ActiveTab?.LastSnapshot;
-    }
-
-    public static async Task<SnapshotPayload> GetAriaSnapshotAsync(CancellationToken cancellationToken = default)
-    {
-        var tab = await GetActiveTabAsync(cancellationToken).ConfigureAwait(false);
-        return await SnapshotManager.CaptureAsync(tab, cancellationToken).ConfigureAwait(false);
-    }
-
     public static IReadOnlyList<TabDescriptor> DescribeTabs()
     {
         return TabManager.DescribeTabs();
     }
-
-    internal static IReadOnlyDictionary<string, ToolMetadata> RegisteredToolMetadata => ToolRegistry;
 
     private static void RegisterTool(ToolMetadata metadata)
     {

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -15,12 +14,6 @@ namespace PlaywrightMcpServer;
 [McpServerToolType]
 public sealed partial class PlaywrightTools
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
-
     private static readonly object Gate = new();
     private static readonly SnapshotManager SnapshotManager = new();
     private static readonly TabManager TabManager = new();
@@ -69,10 +62,11 @@ public sealed partial class PlaywrightTools
     private static string TracesDir =>
         Path.GetFullPath("./traces");
 
-    private static string Serialize(object value) => JsonSerializer.Serialize(value, JsonOptions);
+    private static string Serialize(object value)
+        => JsonSerializer.Serialize(value, ResponseJsonSerializer.Options);
 
     private static string Serialize(Response response)
-        => JsonSerializer.Serialize(response.Serialize(), JsonOptions);
+        => JsonSerializer.Serialize(response.Serialize(), ResponseJsonSerializer.Options);
 
     private static string QuoteJsString(string? value)
     {

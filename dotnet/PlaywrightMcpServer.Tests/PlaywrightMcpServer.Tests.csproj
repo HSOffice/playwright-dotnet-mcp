@@ -16,6 +16,7 @@
     <Compile Include="../Response.cs" />
     <Compile Include="../ResponseConfiguration.cs" />
     <Compile Include="../ResponseContent.cs" />
+    <Compile Include="../ResponseJsonSerializer.cs" />
     <Compile Include="../ResponseContext.cs" />
     <Compile Include="../SecretRedactor.cs" />
     <Compile Include="../SnapshotMarkdownBuilder.cs" />

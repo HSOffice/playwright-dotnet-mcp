@@ -40,6 +40,12 @@ public sealed partial class PlaywrightTools
         RegisterTool(new ToolMetadata("browser_navigate", "Navigate to a URL.", "action", "core"));
         RegisterTool(new ToolMetadata("browser_navigate_back", "Go back to the previous page.", "action", "core"));
         RegisterTool(new ToolMetadata("browser_fill_form", "Fill form", "input", "core"));
+        RegisterTool(new ToolMetadata("browser_snapshot", "Page snapshot", "readOnly", "core"));
+        RegisterTool(new ToolMetadata("browser_click", "Click", "input", "core"));
+        RegisterTool(new ToolMetadata("browser_drag", "Drag mouse", "input", "core"));
+        RegisterTool(new ToolMetadata("browser_hover", "Hover mouse", "input", "core"));
+        RegisterTool(new ToolMetadata("browser_select_option", "Select option", "input", "core"));
+        RegisterTool(new ToolMetadata("browser_generate_locator", "Create locator for element", "readOnly", "testing"));
     }
 
     private static bool Headless =>

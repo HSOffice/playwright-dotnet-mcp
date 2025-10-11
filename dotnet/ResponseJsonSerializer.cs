@@ -33,10 +33,15 @@ internal static class ResponseJsonSerializer
         typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
         {
             IgnoreUnrecognizedTypeDiscriminators = true,
-            UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.Fail
+            UnknownDerivedTypeHandling = GetFailUnknownDerivedTypeHandling()
         };
 
         typeInfo.PolymorphismOptions.DerivedTypes.Add(new JsonDerivedType(typeof(TextContent), "text"));
         typeInfo.PolymorphismOptions.DerivedTypes.Add(new JsonDerivedType(typeof(ImageContent), "image"));
     }
+
+    private static JsonUnknownDerivedTypeHandling GetFailUnknownDerivedTypeHandling()
+        => Enum.TryParse("Fail", ignoreCase: false, out JsonUnknownDerivedTypeHandling failHandling)
+            ? failHandling
+            : default;
 }

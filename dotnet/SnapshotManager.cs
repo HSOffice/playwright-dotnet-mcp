@@ -43,7 +43,7 @@ internal sealed class SnapshotManager
         return snapshotPayload;
     }
 
-    private static Task<string?> TryGetAriaSnapshotAsync(IPage page, CancellationToken cancellationToken)
+    private static async Task<string?> TryGetAriaSnapshotAsync(IPage page, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var yaml = await page.Locator("html").AriaSnapshotAsync(new()).ConfigureAwait(false);

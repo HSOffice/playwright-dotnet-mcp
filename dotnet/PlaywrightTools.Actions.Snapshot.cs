@@ -72,6 +72,8 @@ public sealed partial class PlaywrightTools
 
                 await tab.WaitForCompletionAsync(async ct =>
                 {
+                    ct.ThrowIfCancellationRequested();
+
                     if (doubleClick == true)
                     {
                         var options = new LocatorDblClickOptions();
@@ -85,7 +87,7 @@ public sealed partial class PlaywrightTools
                             options.Modifiers = modifierValues;
                         }
 
-                        await locator.DblClickAsync(options, cancellationToken: ct).ConfigureAwait(false);
+                        await locator.DblClickAsync(options).ConfigureAwait(false);
                     }
                     else
                     {
@@ -100,7 +102,7 @@ public sealed partial class PlaywrightTools
                             options.Modifiers = modifierValues;
                         }
 
-                        await locator.ClickAsync(options, cancellationToken: ct).ConfigureAwait(false);
+                        await locator.ClickAsync(options).ConfigureAwait(false);
                     }
                 }, token).ConfigureAwait(false);
 
@@ -169,7 +171,8 @@ public sealed partial class PlaywrightTools
 
                 await tab.WaitForCompletionAsync(async ct =>
                 {
-                    await locators[0].DragToAsync(locators[1], cancellationToken: ct).ConfigureAwait(false);
+                    ct.ThrowIfCancellationRequested();
+                    await locators[0].DragToAsync(locators[1]).ConfigureAwait(false);
                 }, token).ConfigureAwait(false);
 
                 var startSource = $"page.locator({QuoteJsString($"aria-ref={startRef}")})";
@@ -214,7 +217,8 @@ public sealed partial class PlaywrightTools
 
                 await tab.WaitForCompletionAsync(async ct =>
                 {
-                    await locator.HoverAsync(cancellationToken: ct).ConfigureAwait(false);
+                    ct.ThrowIfCancellationRequested();
+                    await locator.HoverAsync().ConfigureAwait(false);
                 }, token).ConfigureAwait(false);
 
                 response.AddCode($"await page.locator({QuoteJsString($"aria-ref={elementRef}")}).hover();");
@@ -275,7 +279,8 @@ public sealed partial class PlaywrightTools
 
                 await tab.WaitForCompletionAsync(async ct =>
                 {
-                    await locator.SelectOptionAsync(options, cancellationToken: ct).ConfigureAwait(false);
+                    ct.ThrowIfCancellationRequested();
+                    await locator.SelectOptionAsync(options).ConfigureAwait(false);
                 }, token).ConfigureAwait(false);
 
                 response.AddCode($"await page.locator({QuoteJsString($"aria-ref={elementRef}")}).selectOption({FormatJsArray(normalizedValues)});");
@@ -411,18 +416,6 @@ public sealed partial class PlaywrightTools
 
     private static string FormatJsArray(IReadOnlyList<string> values)
         => "[" + string.Join(", ", values.Select(QuoteJsString)) + "]";
-
-    private static string QuoteJsString(string? value)
-    {
-        value ??= string.Empty;
-        return "'" + value
-            .Replace("\\", "\\\\")
-            .Replace("\r", "\\r")
-            .Replace("\n", "\\n")
-            .Replace("\t", "\\t")
-            .Replace("'", "\\'")
-            + "'";
-    }
 
     private static string QuoteForResult(string value)
         => $"\"{value.Replace("\"", "\\\"")}\"";

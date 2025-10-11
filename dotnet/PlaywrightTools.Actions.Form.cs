@@ -234,19 +234,6 @@ public sealed partial class PlaywrightTools
         return $"{name} ({type})";
     }
 
-    private static string QuoteJsString(string? value)
-    {
-        value ??= string.Empty;
-
-        return "'" + value
-            .Replace("\\", "\\\\")
-            .Replace("\r", "\\r")
-            .Replace("\n", "\\n")
-            .Replace("\t", "\\t")
-            .Replace("'", "\\'")
-            + "'";
-    }
-
     private static Exception CreateLocatorException(BrowserFillFormField field, PlaywrightException inner)
     {
         var name = string.IsNullOrWhiteSpace(field.Name) ? field.Reference : field.Name;

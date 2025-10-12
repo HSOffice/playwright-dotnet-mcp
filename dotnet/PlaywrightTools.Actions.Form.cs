@@ -134,7 +134,6 @@ public sealed partial class PlaywrightTools
                     response.AddResult("No form fields were updated.");
                 }
 
-                response.SetIncludeSnapshot();
                 response.SetIncludeTabs();
             },
             cancellationToken).ConfigureAwait(false);

@@ -465,7 +465,7 @@ public sealed partial class PlaywrightTools
         if (!string.IsNullOrWhiteSpace(descriptor.Role) && !string.IsNullOrWhiteSpace(descriptor.Name))
         {
             var (role, roleName) = NormalizeAriaRole(descriptor.Role);
-            var options = new LocatorGetByRoleOptions { Name = descriptor.Name };
+            var options = new PageGetByRoleOptions { Name = descriptor.Name };
             var locator = tab.Page.GetByRole(role, options);
             return new ResolvedLocator(locator, $"page.getByRole({QuoteJsString(roleName)}, {{ name: {QuoteJsString(descriptor.Name)} }})", null, roleName, descriptor.Name);
         }

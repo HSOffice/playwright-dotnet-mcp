@@ -149,6 +149,7 @@
 - Input schema:
   - `element` (string): “Human-readable element description used to obtain permission to interact with the element.”
   - `ref` (string): “Exact target element reference from the page snapshot.”
+  - `type` (enum button/link/checkbox/radio/switch/combobox/menuitem/menuitemcheckbox/menuitemradio/option/tab/treeitem/listitem/slider/textbox): “Type of the field.”
   - `doubleClick` (optional boolean): “Whether to perform a double click instead of a single click.”
   - `button` (optional enum left/right/middle): “Button to click, defaults to left.”
   - `modifiers` (optional array of enums Alt/Control/ControlOrMeta/Meta/Shift): “Modifier keys to press.”

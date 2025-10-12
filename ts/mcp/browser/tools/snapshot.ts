@@ -40,7 +40,26 @@ export const elementSchema = z.object({
   ref: z.string().describe('Exact target element reference from the page snapshot'),
 });
 
+const clickTypes = [
+  'button',
+  'link',
+  'checkbox',
+  'radio',
+  'switch',
+  'combobox',
+  'menuitem',
+  'menuitemcheckbox',
+  'menuitemradio',
+  'option',
+  'tab',
+  'treeitem',
+  'listitem',
+  'slider',
+  'textbox',
+] as const;
+
 const clickSchema = elementSchema.extend({
+  type: z.enum(clickTypes).describe('Type of the field (button, link, checkbox, radio, combobox, textbox, menuitem, menuitemcheckbox, menuitemradio, option, tab, treeitem, listitem, slider, switch).'),
   doubleClick: z.boolean().optional().describe('Whether to perform a double click instead of a single click'),
   button: z.enum(['left', 'right', 'middle']).optional().describe('Button to click, defaults to left'),
   modifiers: z.array(z.enum(['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift'])).optional().describe('Modifier keys to press'),

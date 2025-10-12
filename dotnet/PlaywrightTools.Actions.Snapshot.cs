@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
@@ -34,7 +35,7 @@ public sealed partial class PlaywrightTools
     [Description("Perform click on a web page.")]
     public static async Task<string> BrowserClickAsync(
         [Description("Human-readable element description used to obtain permission to interact with the element.")] string element,
-        [Description("Exact target element reference from the page snapshot.")] string elementRef,
+        [Description("Exact accessible name for the target element from the page snapshot.")] string elementRef,
         [Description("Whether to perform a double click instead of a single click.")] bool? doubleClick = null,
         [Description("Button to click, defaults to left.")] string? button = null,
         [Description("Modifier keys to press.")] IReadOnlyList<string>? modifiers = null,
@@ -65,7 +66,27 @@ public sealed partial class PlaywrightTools
             async (response, token) =>
             {
                 var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
-                var locator = await tab.GetLocatorByRefAsync(element, elementRef, token).ConfigureAwait(false);
+                var resolvedLocator = await ResolveLocatorAsync(tab, element, elementRef, token).ConfigureAwait(false);
+                if (resolvedLocator.SnapshotRef is not null)
+                {
+                    args["ref"] = resolvedLocator.SnapshotRef;
+                }
+                else
+                {
+                    args["ref"] = elementRef;
+                }
+
+                if (resolvedLocator.RoleName is not null)
+                {
+                    args["role"] = resolvedLocator.RoleName;
+                }
+
+                if (resolvedLocator.AccessibleName is not null)
+                {
+                    args["name"] = resolvedLocator.AccessibleName;
+                }
+
+                var locator = resolvedLocator.Locator;
 
                 var (mouseButton, buttonName) = NormalizeMouseButton(button);
                 var (modifierValues, modifierNames) = NormalizeModifiers(modifiers);
@@ -74,39 +95,46 @@ public sealed partial class PlaywrightTools
                 {
                     ct.ThrowIfCancellationRequested();
 
-                    if (doubleClick == true)
+                    try
                     {
-                        var options = new LocatorDblClickOptions();
-                        if (mouseButton is { } dblButton)
+                        if (doubleClick == true)
                         {
-                            options.Button = dblButton;
-                        }
+                            var options = new LocatorDblClickOptions();
+                            if (mouseButton is { } dblButton)
+                            {
+                                options.Button = dblButton;
+                            }
 
-                        if (modifierValues.Length > 0)
+                            if (modifierValues.Length > 0)
+                            {
+                                options.Modifiers = modifierValues;
+                            }
+
+                            await locator.DblClickAsync(options).ConfigureAwait(false);
+                        }
+                        else
                         {
-                            options.Modifiers = modifierValues;
-                        }
+                            var options = new LocatorClickOptions();
+                            if (mouseButton is { } clickButton)
+                            {
+                                options.Button = clickButton;
+                            }
 
-                        await locator.DblClickAsync(options).ConfigureAwait(false);
+                            if (modifierValues.Length > 0)
+                            {
+                                options.Modifiers = modifierValues;
+                            }
+
+                            await locator.ClickAsync(options).ConfigureAwait(false);
+                        }
                     }
-                    else
+                    catch (PlaywrightException ex) when (resolvedLocator.AccessibleName is not null && resolvedLocator.RoleName is not null)
                     {
-                        var options = new LocatorClickOptions();
-                        if (mouseButton is { } clickButton)
-                        {
-                            options.Button = clickButton;
-                        }
-
-                        if (modifierValues.Length > 0)
-                        {
-                            options.Modifiers = modifierValues;
-                        }
-
-                        await locator.ClickAsync(options).ConfigureAwait(false);
+                        throw CreateLocatorException(element, resolvedLocator.RoleName, resolvedLocator.AccessibleName, ex);
                     }
                 }, token).ConfigureAwait(false);
 
-                var locatorSource = $"page.locator({QuoteJsString($"aria-ref={elementRef}")})";
+                var locatorSource = resolvedLocator.LocatorSource;
                 var method = doubleClick == true ? "dblclick" : "click";
                 var optionsLiteral = FormatClickOptionsLiteral(buttonName, modifierNames);
                 response.AddCode(optionsLiteral is null
@@ -426,4 +454,101 @@ public sealed partial class PlaywrightTools
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult($"page.locator({QuoteJsString($"aria-ref={elementRef}")})");
     }
+
+    private static async Task<ResolvedLocator> ResolveLocatorAsync(TabState tab, string elementDescription, string elementRef, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(tab);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var descriptor = ParseElementReference(elementRef);
+
+        if (!string.IsNullOrWhiteSpace(descriptor.Role) && !string.IsNullOrWhiteSpace(descriptor.Name))
+        {
+            var (role, roleName) = NormalizeAriaRole(descriptor.Role);
+            var options = new LocatorGetByRoleOptions { Name = descriptor.Name };
+            var locator = tab.Page.GetByRole(role, options);
+            return new ResolvedLocator(locator, $"page.getByRole({QuoteJsString(roleName)}, {{ name: {QuoteJsString(descriptor.Name)} }})", null, roleName, descriptor.Name);
+        }
+
+        if (string.IsNullOrWhiteSpace(descriptor.Ref))
+        {
+            throw new ArgumentException("Element ref must include either 'ref' or both 'role' and 'name'.", nameof(elementRef));
+        }
+
+        var locatorByRef = await tab.GetLocatorByRefAsync(elementDescription, descriptor.Ref, cancellationToken).ConfigureAwait(false);
+        return new ResolvedLocator(locatorByRef, $"page.locator({QuoteJsString($"aria-ref={descriptor.Ref}")})", descriptor.Ref, null, null);
+    }
+
+    private static (AriaRole Role, string RoleName) NormalizeAriaRole(string role)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new ArgumentException("Role must not be empty.", nameof(role));
+        }
+
+        var normalized = role.Trim();
+        if (!Enum.TryParse(normalized, ignoreCase: true, out AriaRole parsed))
+        {
+            throw new ArgumentException($"Unsupported ARIA role '{role}'.", nameof(role));
+        }
+
+        return (parsed, parsed.ToString().ToLowerInvariant());
+    }
+
+    private static ElementReferenceDescriptor ParseElementReference(string elementRef)
+    {
+        if (string.IsNullOrWhiteSpace(elementRef))
+        {
+            return new ElementReferenceDescriptor(null, null, null);
+        }
+
+        var trimmed = elementRef.Trim();
+        if (trimmed.Length > 0 && trimmed[0] == '{')
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(trimmed);
+                var root = document.RootElement;
+                var refValue = GetOptionalString(root, "ref");
+                var role = GetOptionalString(root, "role");
+                var name = GetOptionalString(root, "name") ?? GetOptionalString(root, "accessibleName");
+
+                if (refValue is not null || (role is not null && name is not null))
+                {
+                    return new ElementReferenceDescriptor(refValue, role, name);
+                }
+            }
+            catch (JsonException)
+            {
+                // Ignore malformed JSON and fall back to treating the value as a legacy ref identifier.
+            }
+        }
+
+        return new ElementReferenceDescriptor(elementRef, null, null);
+    }
+
+    private static string? GetOptionalString(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        foreach (var property in element.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase) && property.Value.ValueKind == JsonValueKind.String)
+            {
+                return property.Value.GetString();
+            }
+        }
+
+        return null;
+    }
+
+    private static Exception CreateLocatorException(string elementDescription, string roleName, string accessibleName, PlaywrightException inner)
+        => new InvalidOperationException($"Unable to locate element '{elementDescription}' with role '{roleName}' and name '{accessibleName}'. Capture a new snapshot and try again.", inner);
+
+    private readonly record struct ElementReferenceDescriptor(string? Ref, string? Role, string? Name);
+
+    private readonly record struct ResolvedLocator(ILocator Locator, string LocatorSource, string? SnapshotRef, string? RoleName, string? AccessibleName);
 }

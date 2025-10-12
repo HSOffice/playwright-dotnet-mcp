@@ -35,10 +35,10 @@ public sealed partial class PlaywrightTools
     [Description("Perform click on a web page.")]
     public static async Task<string> BrowserClickAsync(
         [Description("Human-readable element description used to obtain permission to interact with the element.")] string element,
-        [Description("Exact accessible name for the target element from the page snapshot.")] string elementRef,
-        [Description("Whether to perform a double click instead of a single click.")] bool? doubleClick = null,
-        [Description("Button to click, defaults to left.")] string? button = null,
-        [Description("Modifier keys to press.")] IReadOnlyList<string>? modifiers = null,
+        [Description("Exact accessible name for the target element from the page snapshot.")] string @ref,
+        [Description("Whether to perform a double click instead of a single click. Button options include 'left', 'right', or 'middle', defaulting to left.")] bool? doubleClick = null,
+        [Description("Button to click. Choose from 'left', 'right', or 'middle'. Defaults to left.")] string? button = null,
+        [Description("Modifier keys to press. Supported values: 'Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift'.")] IReadOnlyList<string>? modifiers = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(element))
@@ -46,15 +46,15 @@ public sealed partial class PlaywrightTools
             throw new ArgumentException("Element description must not be empty.", nameof(element));
         }
 
-        if (string.IsNullOrWhiteSpace(elementRef))
+        if (string.IsNullOrWhiteSpace(@ref))
         {
-            throw new ArgumentException("Element ref must not be empty.", nameof(elementRef));
+            throw new ArgumentException("Element ref must not be empty.", nameof(@ref));
         }
 
         var args = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
             ["element"] = element,
-            ["ref"] = elementRef,
+            ["ref"] = @ref,
             ["doubleClick"] = doubleClick,
             ["button"] = button,
             ["modifiers"] = modifiers?.ToArray()
@@ -66,14 +66,14 @@ public sealed partial class PlaywrightTools
             async (response, token) =>
             {
                 var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
-                var resolvedLocator = await ResolveLocatorAsync(tab, element, elementRef, token).ConfigureAwait(false);
+                var resolvedLocator = await ResolveLocatorAsync(tab, element, @ref, token).ConfigureAwait(false);
                 if (resolvedLocator.SnapshotRef is not null)
                 {
                     args["ref"] = resolvedLocator.SnapshotRef;
                 }
                 else
                 {
-                    args["ref"] = elementRef;
+                    args["ref"] = @ref;
                 }
 
                 if (resolvedLocator.RoleName is not null)

@@ -50,7 +50,7 @@ internal sealed class SnapshotManager
         var yaml = await page.GetInteractiveAriaSnapshotAsync(
             keepHeadings: false,
             keepUrls: false
-        );
+        ).ConfigureAwait(false);
         return yaml;
     }
 }

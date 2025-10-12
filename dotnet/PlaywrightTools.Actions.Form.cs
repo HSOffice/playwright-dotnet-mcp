@@ -40,6 +40,7 @@ public sealed partial class PlaywrightTools
                 }
 
                 var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var page = tab.Page;
                 var updates = new List<string>();
 
                 await tab.WaitForCompletionAsync(async ct =>
@@ -73,19 +74,14 @@ public sealed partial class PlaywrightTools
                         return;
                     }
 
-                    var locatorRequests = preparedFields
-                        .Select(tuple => new TabState.RefLocatorRequest(DescribeField(tuple.Field), tuple.Field.Reference))
-                        .ToArray();
-
-                    var locators = await tab.GetLocatorsByRefAsync(locatorRequests, ct).ConfigureAwait(false);
-
                     for (var i = 0; i < preparedFields.Count; i++)
                     {
                         ct.ThrowIfCancellationRequested();
 
                         var (field, normalizedType) = preparedFields[i];
-                        var locator = locators[i];
-                        var locatorSource = $"await page.locator({QuoteJsString($"aria-ref={field.Reference}")})";
+                        var (role, roleName) = GetRoleForFieldType(normalizedType);
+                        var locator = page.GetByRole(role, new() { Name = field.Reference });
+                        var locatorSource = $"await page.getByRole({QuoteJsString(roleName)}, {{ name: {QuoteJsString(field.Reference)} }})";
 
                         try
                         {
@@ -124,7 +120,7 @@ public sealed partial class PlaywrightTools
                         }
                         catch (PlaywrightException ex)
                         {
-                            throw CreateLocatorException(field, ex);
+                            throw CreateLocatorException(field, roleName, ex);
                         }
                     }
                 }, token).ConfigureAwait(false);
@@ -163,7 +159,7 @@ public sealed partial class PlaywrightTools
         [JsonPropertyName("type")]
         public string Type { get; init; } = string.Empty;
 
-        [Description("Exact target field reference from the page snapshot.")]
+        [Description("Exact accessible name for the target field from the page snapshot.")]
         [JsonPropertyName("ref")]
         public string Reference { get; init; } = string.Empty;
 
@@ -234,11 +230,22 @@ public sealed partial class PlaywrightTools
         return $"{name} ({type})";
     }
 
-    private static Exception CreateLocatorException(BrowserFillFormField field, PlaywrightException inner)
+    private static (AriaRole Role, string RoleName) GetRoleForFieldType(BrowserFillFormFieldType type)
+        => type switch
+        {
+            BrowserFillFormFieldType.Textbox => (AriaRole.Textbox, "textbox"),
+            BrowserFillFormFieldType.Checkbox => (AriaRole.Checkbox, "checkbox"),
+            BrowserFillFormFieldType.Radio => (AriaRole.Radio, "radio"),
+            BrowserFillFormFieldType.Combobox => (AriaRole.Combobox, "combobox"),
+            BrowserFillFormFieldType.Slider => (AriaRole.Slider, "slider"),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported field type for role lookup.")
+        };
+
+    private static Exception CreateLocatorException(BrowserFillFormField field, string roleName, PlaywrightException inner)
     {
         var name = string.IsNullOrWhiteSpace(field.Name) ? field.Reference : field.Name;
         return new InvalidOperationException(
-            $"Unable to locate element '{name}' with ref '{field.Reference}'. Capture a new snapshot and try again.",
+            $"Unable to locate element '{name}' with role '{roleName}' and name '{field.Reference}'. Capture a new snapshot and try again.",
             inner);
     }
 }

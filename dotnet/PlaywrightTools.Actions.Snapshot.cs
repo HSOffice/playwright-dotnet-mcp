@@ -119,7 +119,7 @@ public sealed partial class PlaywrightTools
                             options.Modifiers = modifierValues;
                         }
 
-                        await locator.ClickAsync(options).ConfigureAwait(false);
+                        await locator.First.ClickAsync(options).ConfigureAwait(false);
                     }
                 }, token).ConfigureAwait(false);
 

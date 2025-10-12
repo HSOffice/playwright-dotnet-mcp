@@ -35,7 +35,7 @@ public sealed partial class PlaywrightTools
     public static async Task<string> BrowserClickAsync(
         [Description("Human-readable element description used to obtain permission to interact with the element.")] string element,
         [Description("Exact accessible name for the target element from the page snapshot.")] string @ref,
-        [Description("Type of the field (button, link, checkbox, radio, combobox, textbox, menuitem, menuitemcheckbox, menuitemradio, option, tab, treeitem, listitem, slider, switch).")] string type,
+        [Description("Type of the field (button or link).")] string type,
         [Description("Whether to perform a double click instead of a single click. Button options include 'left', 'right', or 'middle', defaulting to left.")] bool? doubleClick = null,
         [Description("Button to click. Choose from 'left', 'right', or 'middle'. Defaults to left.")] string? button = null,
         [Description("Modifier keys to press. Supported values: 'Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift'.")] IReadOnlyList<string>? modifiers = null,
@@ -343,29 +343,10 @@ public sealed partial class PlaywrightTools
             cancellationToken).ConfigureAwait(false);
     }
 
-    private static readonly Dictionary<string, string> s_clickTypeAliases = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["fill"] = "textbox",
-        ["field"] = "textbox"
-    };
-
     private static readonly HashSet<string> s_supportedClickRoleNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "button",
-        "link",
-        "checkbox",
-        "radio",
-        "switch",
-        "combobox",
-        "menuitem",
-        "menuitemcheckbox",
-        "menuitemradio",
-        "option",
-        "tab",
-        "treeitem",
-        "listitem",
-        "slider",
-        "textbox"
+        "link"
     };
 
     private static bool TryNormalizeClickType(string? type, out AriaRole role, out string roleName)
@@ -383,11 +364,6 @@ public sealed partial class PlaywrightTools
         if (normalized.Length == 0)
         {
             return false;
-        }
-
-        if (s_clickTypeAliases.TryGetValue(normalized, out var alias))
-        {
-            normalized = alias;
         }
 
         if (!s_supportedClickRoleNames.Contains(normalized))

@@ -31,7 +31,8 @@ public sealed partial class PlaywrightTools
                     installArgs.Add(channel);
                 }
 
-                var exitCode = await Program.Main(installArgs.ToArray()).ConfigureAwait(false);
+                var exitCode = await Task.Run(() => Program.Main(installArgs.ToArray()), token)
+                    .ConfigureAwait(false);
                 if (exitCode != 0)
                 {
                     throw new InvalidOperationException($"Failed to install Playwright browser for channel '{channel}'. Exit code: {exitCode}.");

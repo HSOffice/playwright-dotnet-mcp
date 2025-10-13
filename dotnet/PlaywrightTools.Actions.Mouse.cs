@@ -37,7 +37,7 @@ public sealed partial class PlaywrightTools
                 await tab.WaitForCompletionAsync(async ct =>
                 {
                     ct.ThrowIfCancellationRequested();
-                    await tab.Page.Mouse.MoveAsync(x, y).ConfigureAwait(false);
+                    await tab.Page.Mouse.MoveAsync((float)x, (float)y).ConfigureAwait(false);
                 }, token).ConfigureAwait(false);
             },
             cancellationToken).ConfigureAwait(false);
@@ -74,7 +74,7 @@ public sealed partial class PlaywrightTools
                 {
                     ct.ThrowIfCancellationRequested();
                     var mouse = tab.Page.Mouse;
-                    await mouse.MoveAsync(x, y).ConfigureAwait(false);
+                    await mouse.MoveAsync((float)x, (float)y).ConfigureAwait(false);
                     await mouse.DownAsync().ConfigureAwait(false);
                     await mouse.UpAsync().ConfigureAwait(false);
                 }, token).ConfigureAwait(false);
@@ -118,9 +118,9 @@ public sealed partial class PlaywrightTools
                 {
                     ct.ThrowIfCancellationRequested();
                     var mouse = tab.Page.Mouse;
-                    await mouse.MoveAsync(startX, startY).ConfigureAwait(false);
+                    await mouse.MoveAsync((float)startX, (float)startY).ConfigureAwait(false);
                     await mouse.DownAsync().ConfigureAwait(false);
-                    await mouse.MoveAsync(endX, endY).ConfigureAwait(false);
+                    await mouse.MoveAsync((float)endX, (float)endY).ConfigureAwait(false);
                     await mouse.UpAsync().ConfigureAwait(false);
                 }, token).ConfigureAwait(false);
             },

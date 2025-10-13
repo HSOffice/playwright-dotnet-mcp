@@ -64,11 +64,7 @@ public sealed partial class PlaywrightTools
                 await tab.WaitForCompletionAsync(async ct =>
                 {
                     ct.ThrowIfCancellationRequested();
-                    await tab.Page.SetViewportSizeAsync(new ViewportSize
-                    {
-                        Width = width,
-                        Height = height
-                    }).ConfigureAwait(false);
+                    await tab.Page.SetViewportSizeAsync(width, height).ConfigureAwait(false);
                 }, token).ConfigureAwait(false);
             },
             cancellationToken).ConfigureAwait(false);

@@ -21,6 +21,57 @@ Playwright .NET MCP 为需要将浏览器能力暴露给大语言模型 (LLM) �
 
 ---
 
+## 🧭 迁移蓝图速览 | Migration Blueprint at a Glance
+
+为帮助贡献者快速理解 TypeScript 参考实现与 .NET 版本之间的差异，以下内容摘自 [`docs/PlaywrightMcp_Analysis_Report.md`](docs/PlaywrightMcp_Analysis_Report.md)，并在此总结：
+
+### TypeScript 版关键模块
+
+| 模块路径 | 职责概述 |
+| --- | --- |
+| `ts/mcp/browser/browserContextFactory.ts` | 创建持久化、隔离、远程、CDP 或共享等多类型浏览器上下文，统一注入追踪、初始化脚本与退出清理逻辑。 |
+| `ts/mcp/browser/context.ts` | 管理上下文生命周期、Tab 列表、模态状态、请求拦截、录制钩子及快照产物（视频、追踪、下载）。 |
+| `ts/mcp/browser/response.ts` | 聚合工具结果，生成代码、快照与图像，格式化 Markdown 内容并执行敏感信息脱敏。 |
+| `ts/mcp/browser/tab.ts` | 表征单页，监听控制台/请求/对话框/下载事件，实现 `_snapshotForAI` 并维护模态状态。 |
+| `ts/mcp/browser/tools/*` | 定义工具元数据、能力过滤与交互逻辑（快照、Tab 管理、Evaluate、拖拽、定位器生成等）。 |
+
+> **能力特征摘要**：TypeScript 实现拥有成熟的快照体系（`_snapshotForAI` + `response.ts`）、多上下文/多标签管理、统一工具注册与等待重试模型，并通过注入脚本生成可执行的 Playwright 代码段。
+
+### .NET 版当前状况
+
+- `dotnet/PlaywrightTools.cs` 仍以单页模型为主，事件追踪与状态管理耦合在静态字段中。
+- `dotnet/PlaywrightTools.Actions/*.cs` 多数尚未实现快照、交互与响应封装，保留 `NotImplementedException` 占位。
+- `dotnet/mcp` 虽已搭建 Context/Tab/Tool 框架，但与真实 Playwright 对象、模态守卫及快照流程尚未完全接轨。
+- `SnapshotBuilder` 等组件返回占位文本，缺乏结构化 DOM/ARIA 数据。
+
+### 差异焦点与改进建议
+
+| 改进方向 | TypeScript 实践 | .NET 缺口 | 建议措施 |
+| --- | --- | --- | --- |
+| 快照管理 | `tab.ts` 捕获 `_snapshotForAI`，`response.ts` 控制嵌入、脱敏与落盘。 | `BrowserSnapshotAsync`、`SnapshotBuilder` 未生成结构化数据。 | 构建 `SnapshotManager`，使用 `IPage.Accessibility.SnapshotAsync` 等 API 并统一写入响应。 |
+| 标签页/上下文 | `context.ts`/`tab.ts` 管理多页签、模态状态及下载/追踪。 | 缺少真实 `IPage` 绑定与多标签控制。 | 引入 `TabManager` 维护页面集合、事件订阅与模态状态。 |
+| 工具元数据 | `defineTool` 暴露 type/capability/schema，并按配置过滤。 | `ToolHelpers` 仅输出占位 Markdown。 | 设计 `ToolMetadata`/`ToolRegistry`，补全 schema 与能力过滤。 |
+| 执行模型 | 使用 `progress.race()` 等等待/重试策略，统一在 `Response.finish()` 收尾。 | `ToolExecutionService` 缺少超时、重试与快照收尾。 | 增设 `ExecutionOrchestrator`，在执行后协调等待、清理与响应合并。 |
+| 脚本注入 | `callOnPageNoTrace` 等封装无痕脚本执行与代码生成。 | Evaluate/交互工具尚未实现封装。 | 创建统一的脚本执行辅助方法，支持点击、拖拽、Evaluate 等操作。 |
+
+### 融合实施路径
+
+1. **新增核心组件**：`SnapshotManager`、`TabManager`、`ToolRegistry`、`ExecutionOrchestrator`，分别负责快照收集、多 Tab 管理、工具元数据与执行编排。
+2. **重构 PlaywrightTools 与 Actions**：拆分为可注入服务、补齐工具实现、在重启流程中恢复 Tab 状态。
+3. **对齐参考模块**：重点参考 TypeScript 的 `tab.ts`、`context.ts`、`tools/snapshot.ts`、`tools/tabs.ts`、`tools/evaluate.ts` 与 `response.ts` 的数据流与守卫逻辑。
+4. **迭代步骤**：先落地 Snapshot/Tab 管理基础，逐步补齐工具 schema 与响应构建，最后扩展测试能力与追踪/截图等附加特性。
+
+### 后续行动清单
+
+- [ ] 设计核心管理组件接口并撰写实现草稿。
+- [ ] 更新 `PlaywrightTools` 与关键 Actions，使其使用新服务并解除占位实现。
+- [ ] 调整 `dotnet/mcp` 下 Context、Tab、Tool、Runtime 的对接逻辑。
+- [ ] 基于能力过滤完成端到端测试，覆盖多 Tab 快照、模态状态与异步等待场景。
+
+若需完整背景与论证，请查阅原始分析报告以获取更详尽的比较表、能力说明与实施建议。
+
+---
+
 ## 🔍 能力速览 | Feature Highlights
 
 ### 浏览器工具分组

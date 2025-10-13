@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
+using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
 
@@ -15,13 +19,45 @@ public sealed partial class PlaywrightTools
         [Description("ACCESSIBLE_NAME of the element.")] string accessibleName,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for verifying element visibility by role and accessible name.
-        // Pseudocode:
-        // 1. Query the accessibility tree for the element matching the criteria.
-        // 2. Confirm the element is visible/present.
-        // 3. Return a serialized verification result with status details.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new ArgumentException("Role must not be empty.", nameof(role));
+        }
+
+        if (string.IsNullOrWhiteSpace(accessibleName))
+        {
+            throw new ArgumentException("Accessible name must not be empty.", nameof(accessibleName));
+        }
+
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["role"] = role,
+            ["accessibleName"] = accessibleName
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_verify_element_visible",
+            args,
+            async (response, token) =>
+            {
+                if (!Enum.TryParse<AriaRole>(role, true, out var ariaRole))
+                {
+                    throw new ArgumentException($"Unsupported role '{role}'.", nameof(role));
+                }
+
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var locator = tab.Page.GetByRole(ariaRole, new() { Name = accessibleName });
+                var count = await locator.CountAsync().ConfigureAwait(false);
+                if (count == 0)
+                {
+                    response.AddError($"Element with role \"{role}\" and accessible name \"{accessibleName}\" not found");
+                    return;
+                }
+
+                response.AddCode($"await expect(page.getByRole({QuoteJsString(role)}, {{ name: {QuoteJsString(accessibleName)} }})).toBeVisible();");
+                response.AddResult("Done");
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "browser_verify_text_visible")]
@@ -30,13 +66,51 @@ public sealed partial class PlaywrightTools
         [Description("TEXT to verify. Can be found in the snapshot like this: `- role \"Accessible Name\": {TEXT}` or like this: `- text: {TEXT}`.")] string text,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for checking visibility of arbitrary text.
-        // Pseudocode:
-        // 1. Search the page or accessibility snapshot for the specified text.
-        // 2. Determine whether the text is currently visible.
-        // 3. Return a serialized result describing the verification outcome.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new ArgumentException("Text must not be empty.", nameof(text));
+        }
+
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["text"] = text
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_verify_text_visible",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var locator = tab.Page.GetByText(text);
+                var count = await locator.CountAsync().ConfigureAwait(false);
+                if (count == 0)
+                {
+                    response.AddError("Text not found");
+                    return;
+                }
+
+                var visible = false;
+                for (var i = 0; i < count; i++)
+                {
+                    var candidate = locator.Nth(i);
+                    if (await candidate.IsVisibleAsync().ConfigureAwait(false))
+                    {
+                        visible = true;
+                        break;
+                    }
+                }
+
+                if (!visible)
+                {
+                    response.AddError("Text not found");
+                    return;
+                }
+
+                response.AddCode($"await expect(page.getByText({QuoteJsString(text)})).toBeVisible();");
+                response.AddResult("Done");
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "browser_verify_list_visible")]
@@ -47,13 +121,56 @@ public sealed partial class PlaywrightTools
         [Description("Items to verify.")] string[] items,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for validating a list and its contents.
-        // Pseudocode:
-        // 1. Locate the list element via its reference.
-        // 2. Compare the displayed items with the provided list of expected items.
-        // 3. Return serialized verification details including mismatches if any.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(element))
+        {
+            throw new ArgumentException("Element description must not be empty.", nameof(element));
+        }
+
+        if (string.IsNullOrWhiteSpace(elementRef))
+        {
+            throw new ArgumentException("Element ref must not be empty.", nameof(elementRef));
+        }
+
+        items ??= Array.Empty<string>();
+
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["element"] = element,
+            ["ref"] = elementRef,
+            ["items"] = items.ToArray()
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_verify_list_visible",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var locator = await tab.GetLocatorByRefAsync(new TabState.RefLocatorRequest(element, elementRef), token).ConfigureAwait(false);
+
+                var collected = new List<string>();
+                foreach (var item in items)
+                {
+                    var itemLocator = locator.GetByText(item);
+                    var count = await itemLocator.CountAsync().ConfigureAwait(false);
+                    if (count == 0)
+                    {
+                        response.AddError($"Item \"{item}\" not found");
+                        return;
+                    }
+
+                    var textContent = await itemLocator.First.TextContentAsync().ConfigureAwait(false) ?? string.Empty;
+                    collected.Add(textContent);
+                }
+
+                var formattedItems = collected
+                    .Select(text => $"  - listitem: {QuoteForResult(text)}");
+                var ariaSnapshot = "`\n- list:\n" + string.Join("\n", formattedItems) + "\n`";
+
+                response.AddCode($"await expect(page.locator('body')).toMatchAriaSnapshot({ariaSnapshot});");
+                response.AddResult("Done");
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "browser_verify_value")]
@@ -65,12 +182,82 @@ public sealed partial class PlaywrightTools
         [Description("Value to verify. For checkbox, use \"true\" or \"false\".")] string value,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for validating element values based on type.
-        // Pseudocode:
-        // 1. Locate the element according to the descriptors.
-        // 2. Retrieve the element's current value or state.
-        // 3. Compare with the expected value and return serialized results.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(type))
+        {
+            throw new ArgumentException("Type must not be empty.", nameof(type));
+        }
+
+        if (string.IsNullOrWhiteSpace(element))
+        {
+            throw new ArgumentException("Element description must not be empty.", nameof(element));
+        }
+
+        if (string.IsNullOrWhiteSpace(elementRef))
+        {
+            throw new ArgumentException("Element ref must not be empty.", nameof(elementRef));
+        }
+
+        var normalizedType = NormalizeFieldType(type);
+        if (normalizedType == BrowserFillFormFieldType.Unknown)
+        {
+            throw new ArgumentException($"Unsupported element type '{type}'.", nameof(type));
+        }
+
+        value ??= string.Empty;
+
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["type"] = type,
+            ["element"] = element,
+            ["ref"] = elementRef,
+            ["value"] = value
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_verify_value",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var locator = await tab.GetLocatorByRefAsync(new TabState.RefLocatorRequest(element, elementRef), token).ConfigureAwait(false);
+                var locatorSource = await GenerateLocatorSourceAsync(locator, elementRef, token).ConfigureAwait(false);
+
+                switch (normalizedType)
+                {
+                    case BrowserFillFormFieldType.Textbox:
+                    case BrowserFillFormFieldType.Slider:
+                    case BrowserFillFormFieldType.Combobox:
+                        {
+                            var currentValue = await locator.InputValueAsync().ConfigureAwait(false);
+                            if (!string.Equals(currentValue, value, StringComparison.Ordinal))
+                            {
+                                response.AddError($"Expected value \"{value}\", but got \"{currentValue}\"");
+                                return;
+                            }
+
+                            response.AddCode($"await expect({locatorSource}).toHaveValue({QuoteJsString(value)});");
+                            break;
+                        }
+
+                    case BrowserFillFormFieldType.Checkbox:
+                    case BrowserFillFormFieldType.Radio:
+                        {
+                            var expected = ParseBoolean(value, element);
+                            var currentValue = await locator.IsCheckedAsync().ConfigureAwait(false);
+                            if (currentValue != expected)
+                            {
+                                response.AddError($"Expected value \"{value}\", but got \"{currentValue.ToString().ToLowerInvariant()}\"");
+                                return;
+                            }
+
+                            var matcher = currentValue ? "toBeChecked" : "not.toBeChecked";
+                            response.AddCode($"await expect({locatorSource}).{matcher}();");
+                            break;
+                        }
+                }
+
+                response.AddResult("Done");
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 }

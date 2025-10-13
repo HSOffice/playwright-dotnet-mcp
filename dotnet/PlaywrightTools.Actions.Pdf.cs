@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
+using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
 
@@ -14,12 +17,34 @@ public sealed partial class PlaywrightTools
         [Description("File name to save the pdf to. Defaults to `page-{timestamp}.pdf` if not specified.")] string? filename = null,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for exporting the current page as a PDF document.
-        // Pseudocode:
-        // 1. Configure PDF export options, including the optional filename.
-        // 2. Generate the PDF from the active page context.
-        // 3. Return serialized information about the saved PDF file.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["filename"] = filename
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_pdf_save",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                var fileName = string.IsNullOrWhiteSpace(filename)
+                    ? GenerateTimestampedFileName("pdf")
+                    : filename!;
+                var outputPath = ResolvePdfOutputPath(fileName);
+                var directory = Path.GetDirectoryName(outputPath);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                response.AddCode($"await page.pdf({{ path: {QuoteJsString(outputPath)} }});");
+                response.AddResult($"Saved page as {outputPath}");
+                await tab.Page.PdfAsync(new PagePdfOptions
+                {
+                    Path = outputPath
+                }).ConfigureAwait(false);
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 }

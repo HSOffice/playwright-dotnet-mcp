@@ -675,6 +675,33 @@ internal sealed class TabState : IDisposable
         return ModalStateMarkdownBuilder.Build(GetModalStatesSnapshot());
     }
 
+    internal ModalStateEntry? TryGetModalState(string type)
+    {
+        if (string.IsNullOrWhiteSpace(type))
+        {
+            return null;
+        }
+
+        lock (_gate)
+        {
+            return _modalStates.FirstOrDefault(state =>
+                string.Equals(state.Type, type, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    internal bool TryClearModalState(ModalStateEntry? entry)
+    {
+        if (entry is null)
+        {
+            return false;
+        }
+
+        lock (_gate)
+        {
+            return _modalStates.Remove(entry);
+        }
+    }
+
     private NetworkRequestEntry[] CloneNetworkRequestsUnsafe()
     {
         if (_networkRequests.Count == 0)

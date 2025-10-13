@@ -25,9 +25,9 @@
 
 ## 二、.NET 版本现状概览
 
-- `dotnet/PlaywrightTools.cs`：集中处理浏览器启动/重启/关闭，当前仅维持单一 `IPage` 实例，事件追踪与状态管理耦合在静态字段中。
-- `dotnet/PlaywrightTools.Actions/*.cs`：多数工具文件仍为 `NotImplementedException` 占位，缺乏实际的快照、交互与返回值封装。
-- `dotnet/mcp` 目录：已搭好类比 TS 的骨架（Context、Tab、Tool 定义、执行服务等），但仍是最小实现，缺乏 Playwright 对象绑定、模态状态守卫及快照整合。
+- `PlaywrightMcpServer/PlaywrightTools.cs`：集中处理浏览器启动/重启/关闭，当前仅维持单一 `IPage` 实例，事件追踪与状态管理耦合在静态字段中。
+- `PlaywrightMcpServer/PlaywrightTools.Actions/*.cs`：多数工具文件仍为 `NotImplementedException` 占位，缺乏实际的快照、交互与返回值封装。
+- `PlaywrightMcpServer` 目录：已搭好类比 TS 的骨架（Context、Tab、Tool 定义、执行服务等），但仍是最小实现，缺乏 Playwright 对象绑定、模态状态守卫及快照整合。
 - `SnapshotBuilder` 等运行时组件只返回占位字符串，未生成结构化 DOM/ARIA 数据，也未与响应聚合流程打通。
 
 ## 三、差异分析与改进建议
@@ -69,6 +69,6 @@
 
 - [ ] 设计 `SnapshotManager`、`TabManager`、`ToolRegistry`、`ExecutionOrchestrator` 的接口与实现草稿。
 - [ ] 更新 `PlaywrightTools.cs` 与关键 Actions 文件以使用新服务，逐步补齐工具逻辑。
-- [ ] 调整 `dotnet/mcp` 下的 Context、Tab、Tool、Runtime 模块，对接新的服务与响应输出。
+- [ ] 调整 `PlaywrightMcpServer` 下的 Context、Tab、Tool、Runtime 模块，对接新的服务与响应输出。
 - [ ] 结合配置与能力过滤开展端到端测试，验证多标签快照、模态状态、异步等待等场景。
 

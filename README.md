@@ -15,8 +15,8 @@ Playwright .NET MCP 为需要将浏览器能力暴露给大语言模型 (LLM) �
 
 | 路径 | 说明 |
 | --- | --- |
-| `dotnet/` | Playwright MCP 核心实现：`PlaywrightTools` 部分类、响应序列化、Tab 管理与快照构建。|
-| `dotnet/PlaywrightMcpServer.Tests/` | xUnit 测试套件，覆盖响应模型、快照 Markdown 构建、Tab 状态等逻辑。|
+| `PlaywrightMcpServer/` | Playwright MCP 核心实现：`PlaywrightTools` 部分类、响应序列化、Tab 管理与快照构建。|
+| `PlaywrightMcpServer.Tests/` | xUnit 测试套件，覆盖响应模型、快照 Markdown 构建、Tab 状态等逻辑。|
 | `docs/` | 设计记录与迁移规划，含快照能力说明、TypeScript 版本对照等。|
 
 ---
@@ -39,9 +39,9 @@ Playwright .NET MCP 为需要将浏览器能力暴露给大语言模型 (LLM) �
 
 ### .NET 版当前状况
 
-- `dotnet/PlaywrightTools.cs` 仍以单页模型为主，事件追踪与状态管理耦合在静态字段中。
-- `dotnet/PlaywrightTools.Actions/*.cs` 多数尚未实现快照、交互与响应封装，保留 `NotImplementedException` 占位。
-- `dotnet/mcp` 虽已搭建 Context/Tab/Tool 框架，但与真实 Playwright 对象、模态守卫及快照流程尚未完全接轨。
+- `PlaywrightMcpServer/PlaywrightTools.cs` 仍以单页模型为主，事件追踪与状态管理耦合在静态字段中。
+- `PlaywrightMcpServer/PlaywrightTools.Actions/*.cs` 多数尚未实现快照、交互与响应封装，保留 `NotImplementedException` 占位。
+- `PlaywrightMcpServer` 虽已搭建类比 TS 的 Context/Tab/Tool 框架，但与真实 Playwright 对象、模态守卫及快照流程尚未完全接轨。
 - `SnapshotBuilder` 等组件返回占位文本，缺乏结构化 DOM/ARIA 数据。
 
 ### 差异焦点与改进建议
@@ -65,7 +65,7 @@ Playwright .NET MCP 为需要将浏览器能力暴露给大语言模型 (LLM) �
 
 - [ ] 设计核心管理组件接口并撰写实现草稿。
 - [ ] 更新 `PlaywrightTools` 与关键 Actions，使其使用新服务并解除占位实现。
-- [ ] 调整 `dotnet/mcp` 下 Context、Tab、Tool、Runtime 的对接逻辑。
+- [ ] 调整 `PlaywrightMcpServer` 下 Context、Tab、Tool、Runtime 的对接逻辑。
 - [ ] 基于能力过滤完成端到端测试，覆盖多 Tab 快照、模态状态与异步等待场景。
 
 若需完整背景与论证，请查阅原始分析报告以获取更详尽的比较表、能力说明与实施建议。
@@ -119,7 +119,7 @@ Playwright .NET MCP 为需要将浏览器能力暴露给大语言模型 (LLM) �
    ```
 2. **恢复并运行测试 / Restore & run tests**
    ```bash
-   dotnet test dotnet/PlaywrightMcpServer.Tests
+   dotnet test PlaywrightMcpServer.Tests
    ```
    首次执行会构建测试工程并验证快照、响应与 Tab 管理等核心逻辑。
 3. **集成至 MCP 宿主 / Integrate with your MCP host**

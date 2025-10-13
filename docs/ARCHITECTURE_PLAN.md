@@ -1,10 +1,10 @@
 # .NET Playwright MCP 服务代码框架规划
 
-本文档给出在 `dotnet` 目录下实现 Playwright MCP 服务的推荐代码框架，用于指导后续开发。规划遵循 TypeScript 版本的模块划分，确保工具名称、能力与行为一一对应，同时聚焦于“仅提供 MCP 服务，供宿主复用”这一目标。
+本文档给出在 `PlaywrightMcpServer` 目录下实现 Playwright MCP 服务的推荐代码框架，用于指导后续开发。规划遵循 TypeScript 版本的模块划分，确保工具名称、能力与行为一一对应，同时聚焦于“仅提供 MCP 服务，供宿主复用”这一目标。
 
 ## 目录结构
 ```
-dotnet/
+PlaywrightMcpServer/
 ├── ARCHITECTURE_PLAN.md        # 本规划文档
 └── mcp/
     ├── PlaywrightMcpServer.csproj

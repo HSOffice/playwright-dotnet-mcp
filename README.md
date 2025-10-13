@@ -1,6 +1,7 @@
 # Playwright .NET MCP
 
-> 浏览器自动化智能体服务器 (.NET 版) · A Model Context Protocol server toolkit powered by Microsoft Playwright for .NET
+> 浏览器自动化智能体服务器 (.NET 版) ·
+> A Model Context Protocol server toolkit powered by Microsoft Playwright for .NET
 
 Playwright .NET MCP 为需要将浏览器能力暴露给大语言模型 (LLM) 或 Agent 宿主的应用，提供一套 .NET 实现的工具集合。项目遵循 [Model Context Protocol](https://github.com/modelcontextprotocol) 规范，通过 `ModelContextProtocol.Server` 包的 `McpServerTool` 特性描述工具参数与返回值，让宿主可以在不依赖视觉模型的情况下，结构化地驱动网页。
 

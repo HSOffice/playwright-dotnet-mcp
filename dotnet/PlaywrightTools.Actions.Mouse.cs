@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
+using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
 
@@ -16,13 +18,29 @@ public sealed partial class PlaywrightTools
         [Description("Y coordinate.")] double y,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for moving the mouse pointer to coordinates.
-        // Pseudocode:
-        // 1. Resolve the coordinate system relative to the specified element or viewport.
-        // 2. Move the mouse to the target coordinates.
-        // 3. Return a serialized response confirming the final pointer position.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["element"] = element,
+            ["x"] = x,
+            ["y"] = y
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_mouse_move_xy",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                response.AddCode($"// Move mouse to ({x}, {y})");
+                response.AddCode($"await page.mouse.move({x}, {y});");
+
+                await tab.WaitForCompletionAsync(async ct =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await tab.Page.Mouse.MoveAsync(x, y).ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "browser_mouse_click_xy")]
@@ -33,13 +51,35 @@ public sealed partial class PlaywrightTools
         [Description("Y coordinate.")] double y,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for clicking at the specified coordinates.
-        // Pseudocode:
-        // 1. Move the pointer to the designated coordinates.
-        // 2. Perform the click action at that position.
-        // 3. Return serialized details of the click event.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["element"] = element,
+            ["x"] = x,
+            ["y"] = y
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_mouse_click_xy",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                response.SetIncludeSnapshot();
+                response.AddCode($"// Click mouse at coordinates ({x}, {y})");
+                response.AddCode($"await page.mouse.move({x}, {y});");
+                response.AddCode("await page.mouse.down();");
+                response.AddCode("await page.mouse.up();");
+
+                await tab.WaitForCompletionAsync(async ct =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var mouse = tab.Page.Mouse;
+                    await mouse.MoveAsync(x, y).ConfigureAwait(false);
+                    await mouse.DownAsync().ConfigureAwait(false);
+                    await mouse.UpAsync().ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "browser_mouse_drag_xy")]
@@ -52,12 +92,38 @@ public sealed partial class PlaywrightTools
         [Description("End Y coordinate.")] double endY,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for dragging between coordinate points.
-        // Pseudocode:
-        // 1. Move the pointer to the starting coordinates and press the mouse button.
-        // 2. Drag to the ending coordinates while holding the button.
-        // 3. Release the button and return serialized drag information.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["element"] = element,
+            ["startX"] = startX,
+            ["startY"] = startY,
+            ["endX"] = endX,
+            ["endY"] = endY
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_mouse_drag_xy",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                response.SetIncludeSnapshot();
+                response.AddCode($"// Drag mouse from ({startX}, {startY}) to ({endX}, {endY})");
+                response.AddCode($"await page.mouse.move({startX}, {startY});");
+                response.AddCode("await page.mouse.down();");
+                response.AddCode($"await page.mouse.move({endX}, {endY});");
+                response.AddCode("await page.mouse.up();");
+
+                await tab.WaitForCompletionAsync(async ct =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var mouse = tab.Page.Mouse;
+                    await mouse.MoveAsync(startX, startY).ConfigureAwait(false);
+                    await mouse.DownAsync().ConfigureAwait(false);
+                    await mouse.MoveAsync(endX, endY).ConfigureAwait(false);
+                    await mouse.UpAsync().ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 }

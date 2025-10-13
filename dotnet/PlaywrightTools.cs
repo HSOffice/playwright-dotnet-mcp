@@ -25,6 +25,8 @@ public sealed partial class PlaywrightTools
     private static IBrowserContext? _context;
     private static string _browserEngine = "chromium";
     private static bool _tracingActive;
+    private static string? _traceLegend;
+    private static string? _traceName;
 
     static PlaywrightTools()
     {
@@ -159,6 +161,72 @@ public sealed partial class PlaywrightTools
         TabManager.Activate(active);
     }
 
+    private static async Task<TabState> CreateNewTabAsync(CancellationToken cancellationToken)
+    {
+        await EnsureLaunchedAsync(cancellationToken).ConfigureAwait(false);
+        var context = _context ?? throw new InvalidOperationException("Browser context not initialized.");
+        var page = await context.NewPageAsync().ConfigureAwait(false);
+        var tab = TabManager.Register(page, makeActive: true);
+        TabManager.Activate(tab);
+        return tab;
+    }
+
+    private static async Task CloseBrowserContextAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var context = Interlocked.Exchange(ref _context, null);
+        var browser = _browser;
+
+        _tracingActive = false;
+        _traceLegend = null;
+        _traceName = null;
+
+        TabManager.Reset();
+
+        if (context is not null)
+        {
+            try
+            {
+                await context.CloseAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+            }
+        }
+
+        if (browser is not null)
+        {
+            _browser = null;
+            try
+            {
+                await browser.CloseAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+            }
+        }
+
+        var playwright = Interlocked.Exchange(ref _playwright, null);
+        playwright?.Dispose();
+    }
+
+    private static TabState GetTabByIndex(int index)
+    {
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index), index, "Tab index must be non-negative.");
+        }
+
+        var tabs = TabManager.Tabs;
+        if (index >= tabs.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index), index, "Tab index out of range.");
+        }
+
+        return tabs[index];
+    }
+
     private static async Task<IBrowser> LaunchBrowserAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -173,6 +241,27 @@ public sealed partial class PlaywrightTools
             "webkit" => await _playwright!.Webkit.LaunchAsync(options).ConfigureAwait(false),
             _ => await LaunchChromiumAsync(options).ConfigureAwait(false)
         };
+    }
+
+    private static string ResolveInstallChannel()
+    {
+        if (!string.Equals(_browserEngine, "chromium", StringComparison.OrdinalIgnoreCase))
+        {
+            return _browserEngine;
+        }
+
+        var explicitChannel = Environment.GetEnvironmentVariable("MCP_PLAYWRIGHT_CHROMIUM_CHANNEL");
+        if (!string.IsNullOrWhiteSpace(explicitChannel))
+        {
+            return explicitChannel;
+        }
+
+        if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+        {
+            return "msedge";
+        }
+
+        return "chromium";
     }
 
     private static async Task<IBrowser> LaunchChromiumAsync(BrowserTypeLaunchOptions options)
@@ -224,6 +313,18 @@ public sealed partial class PlaywrightTools
 
     internal static string ResolveDownloadOutputPath(string outputPath)
         => ResolveOutputPath(outputPath, DownloadsDir);
+
+    private static string ResolveShotsOutputPath(string fileName)
+        => ResolveOutputPath(fileName, ShotsDir);
+
+    private static string ResolvePdfOutputPath(string fileName)
+        => ResolveOutputPath(fileName, PdfDir);
+
+    private static string ResolveTraceOutputPath(string fileName)
+        => ResolveOutputPath(fileName, TracesDir);
+
+    private static string GenerateTimestampedFileName(string extension)
+        => $"page-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmssfff}.{extension}";
 
     private static void ContextOnPage(object? sender, IPage page)
     {

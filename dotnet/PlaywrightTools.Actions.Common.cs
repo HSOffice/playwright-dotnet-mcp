@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
+using Microsoft.Playwright;
 
 namespace PlaywrightMcpServer;
 
@@ -13,13 +15,19 @@ public sealed partial class PlaywrightTools
     public static async Task<string> BrowserCloseAsync(
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for closing the current browser page.
-        // Pseudocode:
-        // 1. Retrieve the active page instance.
-        // 2. Invoke the page close operation.
-        // 3. Return a serialized result confirming the page has closed.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal);
+
+        return await ExecuteWithResponseAsync(
+            "browser_close",
+            args,
+            async (response, token) =>
+            {
+                await CloseBrowserContextAsync(token).ConfigureAwait(false);
+                response.AddResult("Closed Playwright browser context.");
+                response.AddCode("await page.close();");
+                response.SetIncludeTabs();
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     [McpServerTool(Name = "browser_resize")]
@@ -29,12 +37,40 @@ public sealed partial class PlaywrightTools
         [Description("Height of the browser window.")] int height,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement tool logic for resizing the browser window.
-        // Pseudocode:
-        // 1. Retrieve the active browser context or page.
-        // 2. Apply the new viewport dimensions using the provided width and height.
-        // 3. Return a serialized result describing the updated size.
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        if (width <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(width), width, "Width must be a positive value.");
+        }
+
+        if (height <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(height), height, "Height must be a positive value.");
+        }
+
+        var args = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["width"] = width,
+            ["height"] = height
+        };
+
+        return await ExecuteWithResponseAsync(
+            "browser_resize",
+            args,
+            async (response, token) =>
+            {
+                var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
+                response.AddCode($"await page.setViewportSize({{ width: {width}, height: {height} }});");
+
+                await tab.WaitForCompletionAsync(async ct =>
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await tab.Page.SetViewportSizeAsync(new ViewportSize
+                    {
+                        Width = width,
+                        Height = height
+                    }).ConfigureAwait(false);
+                }, token).ConfigureAwait(false);
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 }

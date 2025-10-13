@@ -12,16 +12,6 @@
     <PackageReference Include="Moq" Version="4.20.70" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../BrowserModels.cs" />
-    <Compile Include="../Response.cs" />
-    <Compile Include="../ResponseConfiguration.cs" />
-    <Compile Include="../ResponseContent.cs" />
-    <Compile Include="../ResponseJsonSerializer.cs" />
-    <Compile Include="../ResponseContext.cs" />
-    <Compile Include="../SecretRedactor.cs" />
-    <Compile Include="../SnapshotMarkdownBuilder.cs" />
-    <Compile Include="../SnapshotManager.cs" />
-    <Compile Include="../ModalStateMarkdownBuilder.cs" />
-    <Compile Include="../TabManager.cs" />
+    <ProjectReference Include="../PlaywrightMcpServer/PlaywrightMcpServer.csproj" />
   </ItemGroup>
 </Project>

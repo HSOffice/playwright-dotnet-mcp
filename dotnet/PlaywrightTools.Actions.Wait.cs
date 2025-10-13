@@ -59,20 +59,22 @@ public sealed partial class PlaywrightTools
                 {
                     hiddenLocator = tab.Page.GetByText(textGone!).First;
                     response.AddCode($"await page.getByText({QuoteJsString(textGone!)}).first().waitFor({{ state: 'hidden' }});");
+                    token.ThrowIfCancellationRequested();
                     await hiddenLocator.WaitForAsync(new LocatorWaitForOptions
                     {
                         State = WaitForSelectorState.Hidden
-                    }, token).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
 
                 if (!string.IsNullOrWhiteSpace(text))
                 {
                     visibleLocator = tab.Page.GetByText(text!).First;
                     response.AddCode($"await page.getByText({QuoteJsString(text!)}).first().waitFor({{ state: 'visible' }});");
+                    token.ThrowIfCancellationRequested();
                     await visibleLocator.WaitForAsync(new LocatorWaitForOptions
                     {
                         State = WaitForSelectorState.Visible
-                    }, token).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
 
                 response.AddResult($"Waited for {text ?? textGone ?? time?.ToString(CultureInfo.InvariantCulture)}");

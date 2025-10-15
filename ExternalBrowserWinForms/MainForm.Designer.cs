@@ -57,11 +57,10 @@ partial class MainForm
     private System.Windows.Forms.TextBox txtNewTabUrl;
     private System.Windows.Forms.Button btnOpenNewTab;
 
-    private System.Windows.Forms.GroupBox grpPages;
+    private System.Windows.Forms.GroupBox grpPagesLog;
     private System.Windows.Forms.Label lblPages;
     private System.Windows.Forms.ListBox lstPages;
-
-    private System.Windows.Forms.GroupBox grpLog;
+    private System.Windows.Forms.Label lblLog;
     private System.Windows.Forms.TextBox txtLog;
 
     protected override void Dispose(bool disposing)
@@ -81,8 +80,7 @@ partial class MainForm
         grpScripts = new System.Windows.Forms.GroupBox();
         grpAdvanced = new System.Windows.Forms.GroupBox();
         grpUtilities = new System.Windows.Forms.GroupBox();
-        grpPages = new System.Windows.Forms.GroupBox();
-        grpLog = new System.Windows.Forms.GroupBox();
+        grpPagesLog = new System.Windows.Forms.GroupBox();
         txtExePath = new System.Windows.Forms.TextBox();
         btnBrowseExe = new System.Windows.Forms.Button();
         numPort = new System.Windows.Forms.NumericUpDown();
@@ -121,6 +119,7 @@ partial class MainForm
         btnOpenNewTab = new System.Windows.Forms.Button();
         lblPages = new System.Windows.Forms.Label();
         lstPages = new System.Windows.Forms.ListBox();
+        lblLog = new System.Windows.Forms.Label();
         txtLog = new System.Windows.Forms.TextBox();
         ((System.ComponentModel.ISupportInitialize)numPort).BeginInit();
         ((System.ComponentModel.ISupportInitialize)numRetryCount).BeginInit();
@@ -133,8 +132,7 @@ partial class MainForm
         grpScripts.SuspendLayout();
         grpAdvanced.SuspendLayout();
         grpUtilities.SuspendLayout();
-        grpPages.SuspendLayout();
-        grpLog.SuspendLayout();
+        grpPagesLog.SuspendLayout();
 
         // grpConnection
         grpConnection.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -550,16 +548,18 @@ partial class MainForm
         btnOpenNewTab.UseVisualStyleBackColor = true;
         btnOpenNewTab.Click += btnOpenNewTab_Click;
 
-        // grpPages
-        grpPages.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
-        grpPages.Controls.Add(lblPages);
-        grpPages.Controls.Add(lstPages);
-        grpPages.Location = new System.Drawing.Point(10, 555);
-        grpPages.Name = "grpPages";
-        grpPages.Size = new System.Drawing.Size(280, 195);
-        grpPages.TabIndex = 7;
-        grpPages.TabStop = false;
-        grpPages.Text = "页面列表";
+        // grpPagesLog
+        grpPagesLog.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+        grpPagesLog.Controls.Add(txtLog);
+        grpPagesLog.Controls.Add(lblLog);
+        grpPagesLog.Controls.Add(lstPages);
+        grpPagesLog.Controls.Add(lblPages);
+        grpPagesLog.Location = new System.Drawing.Point(300, 555);
+        grpPagesLog.Name = "grpPagesLog";
+        grpPagesLog.Size = new System.Drawing.Size(590, 205);
+        grpPagesLog.TabIndex = 7;
+        grpPagesLog.TabStop = false;
+        grpPagesLog.Text = "页面与日志";
 
         // lblPages
         lblPages.AutoSize = true;
@@ -570,42 +570,39 @@ partial class MainForm
         lblPages.Text = "页面 (Pages)：";
 
         // lstPages
-        lstPages.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+        lstPages.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
         lstPages.FormattingEnabled = true;
         lstPages.ItemHeight = 15;
         lstPages.Location = new System.Drawing.Point(15, 50);
         lstPages.Name = "lstPages";
-        lstPages.Size = new System.Drawing.Size(250, 124);
+        lstPages.Size = new System.Drawing.Size(560, 79);
         lstPages.TabIndex = 1;
         lstPages.SelectedIndexChanged += lstPages_SelectedIndexChanged;
 
-        // grpLog
-        grpLog.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        grpLog.Controls.Add(txtLog);
-        grpLog.Location = new System.Drawing.Point(300, 555);
-        grpLog.Name = "grpLog";
-        grpLog.Size = new System.Drawing.Size(590, 195);
-        grpLog.TabIndex = 8;
-        grpLog.TabStop = false;
-        grpLog.Text = "日志输出";
+        // lblLog
+        lblLog.AutoSize = true;
+        lblLog.Location = new System.Drawing.Point(15, 135);
+        lblLog.Name = "lblLog";
+        lblLog.Size = new System.Drawing.Size(68, 15);
+        lblLog.TabIndex = 2;
+        lblLog.Text = "日志输出：";
 
         // txtLog
         txtLog.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        txtLog.Location = new System.Drawing.Point(15, 25);
+        txtLog.Location = new System.Drawing.Point(15, 155);
         txtLog.Multiline = true;
         txtLog.Name = "txtLog";
         txtLog.ReadOnly = true;
         txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-        txtLog.Size = new System.Drawing.Size(565, 160);
-        txtLog.TabIndex = 0;
+        txtLog.Size = new System.Drawing.Size(560, 45);
+        txtLog.TabIndex = 3;
         txtLog.WordWrap = false;
 
         // MainForm
         AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
         AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
         ClientSize = new System.Drawing.Size(900, 760);
-        Controls.Add(grpLog);
-        Controls.Add(grpPages);
+        Controls.Add(grpPagesLog);
         Controls.Add(grpUtilities);
         Controls.Add(grpAdvanced);
         Controls.Add(grpScripts);
@@ -631,10 +628,8 @@ partial class MainForm
         grpAdvanced.PerformLayout();
         grpUtilities.ResumeLayout(false);
         grpUtilities.PerformLayout();
-        grpPages.ResumeLayout(false);
-        grpPages.PerformLayout();
-        grpLog.ResumeLayout(false);
-        grpLog.PerformLayout();
+        grpPagesLog.ResumeLayout(false);
+        grpPagesLog.PerformLayout();
         ResumeLayout(false);
     }
 }

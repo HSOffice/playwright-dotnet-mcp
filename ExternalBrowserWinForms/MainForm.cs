@@ -66,9 +66,6 @@ public partial class MainForm : Form
         txtExePath.Text = @"D:\\00-培训材料\\MCP\\MyMcpHost\\McpServer\\WinFormsApp\\bin\\Debug\\net8.0-windows\\WinFormsApp.exe";
         numPort.Value = 9222;
         txtStartUrl.Text = "https://example.com";
-        txtUserDataDir.Text = _userDataRoot;
-        txtScreenshotPath.Text = Path.Combine(_screenshotsRoot, "page.png");
-        txtDownloadDir.Text = _downloadsRoot;
     }
 
     private PageItem? SelectedItem => lstPages.SelectedItem as PageItem;
@@ -95,10 +92,11 @@ public partial class MainForm : Form
 
     private async void btnLaunch_Click(object sender, EventArgs e)
     {
+        Directory.CreateDirectory(_userDataRoot);
         var started = _processLauncher.Start(
             txtExePath.Text.Trim(),
             (int)numPort.Value,
-            EnsureDirectory(txtUserDataDir.Text.Trim(), _userDataRoot),
+            _userDataRoot,
             txtProxy.Text.Trim(),
             AppendLog);
 
@@ -165,7 +163,8 @@ public partial class MainForm : Form
             };
 
             await _playwright.EnsureContextAsync(config);
-            await _playwright.CreatePageAsync(EnsureDirectory(txtDownloadDir.Text.Trim(), _downloadsRoot));
+            Directory.CreateDirectory(_downloadsRoot);
+            await _playwright.CreatePageAsync(_downloadsRoot);
             btnGoto.Enabled = true;
         }
         catch (Exception ex)
@@ -187,8 +186,7 @@ public partial class MainForm : Form
         var success = await _playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null);
         if (success && chkAutoScreenshot.Checked)
         {
-            var path = EnsureScreenshotPath();
-            await _playwright.CaptureScreenshotAsync(path);
+            await _playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
         }
     }
 
@@ -197,7 +195,8 @@ public partial class MainForm : Form
         var state = ProtectButtonsDuringRunAll();
         try
         {
-            if (!_processLauncher.Start(txtExePath.Text.Trim(), (int)numPort.Value, EnsureDirectory(txtUserDataDir.Text.Trim(), _userDataRoot), txtProxy.Text.Trim(), AppendLog))
+            Directory.CreateDirectory(_userDataRoot);
+            if (!_processLauncher.Start(txtExePath.Text.Trim(), (int)numPort.Value, _userDataRoot, txtProxy.Text.Trim(), AppendLog))
             {
                 return;
             }
@@ -213,11 +212,12 @@ public partial class MainForm : Form
                 RecordHar = false
             };
             await _playwright.EnsureContextAsync(config);
-            var page = await _playwright.CreatePageAsync(EnsureDirectory(txtDownloadDir.Text.Trim(), _downloadsRoot));
+            Directory.CreateDirectory(_downloadsRoot);
+            var page = await _playwright.CreatePageAsync(_downloadsRoot);
             var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
             if (await _playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null) && chkAutoScreenshot.Checked)
             {
-                await _playwright.CaptureScreenshotAsync(EnsureScreenshotPath());
+                await _playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
             }
 
             btnNewPage.Enabled = true;
@@ -369,36 +369,6 @@ public partial class MainForm : Form
         AppendLog($"切换当前页面为：{SelectedItem?.Name ?? "(unknown)"}");
     }
 
-    private void btnPickScreenshot_Click(object sender, EventArgs e)
-    {
-        using var dialog = new SaveFileDialog
-        {
-            Title = "选择截图保存路径",
-            Filter = "PNG 图片 (*.png)|*.png|所有文件 (*.*)|*.*",
-            FileName = Path.GetFileName(txtScreenshotPath.Text)
-        };
-
-        if (dialog.ShowDialog(this) == DialogResult.OK)
-        {
-            txtScreenshotPath.Text = dialog.FileName;
-            AppendLog($"截图保存路径：{dialog.FileName}");
-        }
-    }
-
-    private void btnPickDownloadDir_Click(object sender, EventArgs e)
-    {
-        using var dialog = new FolderBrowserDialog
-        {
-            Description = "选择下载目录"
-        };
-
-        if (dialog.ShowDialog(this) == DialogResult.OK)
-        {
-            txtDownloadDir.Text = dialog.SelectedPath;
-            AppendLog($"下载目录：{dialog.SelectedPath}");
-        }
-    }
-
     private void btnBrowseExe_Click(object sender, EventArgs e)
     {
         using var dialog = new OpenFileDialog
@@ -412,20 +382,6 @@ public partial class MainForm : Form
         {
             txtExePath.Text = dialog.FileName;
             AppendLog($"已选择 EXE：{dialog.FileName}");
-        }
-    }
-
-    private void btnPickUserData_Click(object sender, EventArgs e)
-    {
-        using var dialog = new FolderBrowserDialog
-        {
-            Description = "选择（或新建）用户数据目录（--user-data-dir）"
-        };
-
-        if (dialog.ShowDialog(this) == DialogResult.OK)
-        {
-            txtUserDataDir.Text = dialog.SelectedPath;
-            AppendLog($"UserDataDir：{dialog.SelectedPath}");
         }
     }
 
@@ -449,37 +405,9 @@ public partial class MainForm : Form
         base.OnFormClosed(e);
     }
 
-    private string EnsureDirectory(string candidate, string fallback)
+    private string GenerateScreenshotPath()
     {
-        var target = string.IsNullOrWhiteSpace(candidate) ? fallback : candidate;
-        try
-        {
-            Directory.CreateDirectory(target);
-        }
-        catch
-        {
-            target = fallback;
-            Directory.CreateDirectory(target);
-        }
-
-        return target;
-    }
-
-    private string EnsureScreenshotPath()
-    {
-        var path = txtScreenshotPath.Text.Trim();
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            path = Path.Combine(_screenshotsRoot, $"page-{DateTime.Now:yyyyMMdd-HHmmss}.png");
-            txtScreenshotPath.Text = path;
-        }
-
-        var directory = Path.GetDirectoryName(path);
-        if (!string.IsNullOrWhiteSpace(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        return path;
+        Directory.CreateDirectory(_screenshotsRoot);
+        return Path.Combine(_screenshotsRoot, $"page-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
     }
 }

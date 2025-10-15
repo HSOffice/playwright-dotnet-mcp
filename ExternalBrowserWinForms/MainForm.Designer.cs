@@ -10,8 +10,6 @@ partial class MainForm
     private System.Windows.Forms.TextBox txtExePath;
     private System.Windows.Forms.Button btnBrowseExe;
     private System.Windows.Forms.NumericUpDown numPort;
-    private System.Windows.Forms.TextBox txtUserDataDir;
-    private System.Windows.Forms.Button btnPickUserData;
     private System.Windows.Forms.TextBox txtStartUrl;
 
     private System.Windows.Forms.Button btnLaunch;
@@ -25,14 +23,11 @@ partial class MainForm
 
     private System.Windows.Forms.Label lblExe;
     private System.Windows.Forms.Label lblPort;
-    private System.Windows.Forms.Label lblUserData;
     private System.Windows.Forms.Label lblUrl;
 
     private System.Windows.Forms.Button btnRunAll;
     private System.Windows.Forms.Button btnResetRunAll;
     private System.Windows.Forms.CheckBox chkAutoScreenshot;
-    private System.Windows.Forms.TextBox txtScreenshotPath;
-    private System.Windows.Forms.Button btnPickScreenshot;
 
     private System.Windows.Forms.Button btnStartLogging;
     private System.Windows.Forms.Button btnStopLogging;
@@ -44,10 +39,6 @@ partial class MainForm
     private System.Windows.Forms.Label lblProxy;
     private System.Windows.Forms.TextBox txtProxy;
     private System.Windows.Forms.CheckBox chkIgnoreTls;
-
-    private System.Windows.Forms.Label lblDownloadDir;
-    private System.Windows.Forms.TextBox txtDownloadDir;
-    private System.Windows.Forms.Button btnPickDownloadDir;
 
     private System.Windows.Forms.CheckBox chkInitScript;
     private System.Windows.Forms.TextBox txtInitScript;
@@ -83,8 +74,6 @@ partial class MainForm
         txtExePath = new System.Windows.Forms.TextBox();
         btnBrowseExe = new System.Windows.Forms.Button();
         numPort = new System.Windows.Forms.NumericUpDown();
-        txtUserDataDir = new System.Windows.Forms.TextBox();
-        btnPickUserData = new System.Windows.Forms.Button();
         txtStartUrl = new System.Windows.Forms.TextBox();
 
         btnLaunch = new System.Windows.Forms.Button();
@@ -98,14 +87,11 @@ partial class MainForm
 
         lblExe = new System.Windows.Forms.Label();
         lblPort = new System.Windows.Forms.Label();
-        lblUserData = new System.Windows.Forms.Label();
         lblUrl = new System.Windows.Forms.Label();
 
         btnRunAll = new System.Windows.Forms.Button();
         btnResetRunAll = new System.Windows.Forms.Button();
         chkAutoScreenshot = new System.Windows.Forms.CheckBox();
-        txtScreenshotPath = new System.Windows.Forms.TextBox();
-        btnPickScreenshot = new System.Windows.Forms.Button();
 
         btnStartLogging = new System.Windows.Forms.Button();
         btnStopLogging = new System.Windows.Forms.Button();
@@ -117,10 +103,6 @@ partial class MainForm
         lblProxy = new System.Windows.Forms.Label();
         txtProxy = new System.Windows.Forms.TextBox();
         chkIgnoreTls = new System.Windows.Forms.CheckBox();
-
-        lblDownloadDir = new System.Windows.Forms.Label();
-        txtDownloadDir = new System.Windows.Forms.TextBox();
-        btnPickDownloadDir = new System.Windows.Forms.Button();
 
         chkInitScript = new System.Windows.Forms.CheckBox();
         txtInitScript = new System.Windows.Forms.TextBox();
@@ -156,12 +138,8 @@ partial class MainForm
         lblPort.Location = new System.Drawing.Point(12, 50);
         lblPort.Text = "调试端口：";
 
-        lblUserData.AutoSize = true;
-        lblUserData.Location = new System.Drawing.Point(12, 85);
-        lblUserData.Text = "UserDataDir：";
-
         lblUrl.AutoSize = true;
-        lblUrl.Location = new System.Drawing.Point(12, 120);
+        lblUrl.Location = new System.Drawing.Point(12, 85);
         lblUrl.Text = "起始 URL：";
 
         // txtExePath
@@ -181,21 +159,8 @@ partial class MainForm
         numPort.Value = 9222;
         numPort.Size = new System.Drawing.Size(120, 23);
 
-        // txtUserDataDir
-        txtUserDataDir.Location = new System.Drawing.Point(100, 82);
-        txtUserDataDir.Size = new System.Drawing.Size(600, 23);
-        txtUserDataDir.ReadOnly = true;
-        txtUserDataDir.TabStop = false;
-
-        // btnPickUserData
-        btnPickUserData.Location = new System.Drawing.Point(710, 81);
-        btnPickUserData.Size = new System.Drawing.Size(75, 25);
-        btnPickUserData.Text = "选择…";
-        btnPickUserData.Enabled = false;
-        btnPickUserData.Click += btnPickUserData_Click;
-
         // txtStartUrl
-        txtStartUrl.Location = new System.Drawing.Point(100, 117);
+        txtStartUrl.Location = new System.Drawing.Point(100, 82);
         txtStartUrl.Size = new System.Drawing.Size(685, 23);
 
         // Buttons row 1 (step-by-step)
@@ -247,19 +212,8 @@ partial class MainForm
 
         chkAutoScreenshot.Location = new System.Drawing.Point(290, 200);
         chkAutoScreenshot.AutoSize = true;
-        chkAutoScreenshot.Text = "导航后自动截图";
+        chkAutoScreenshot.Text = "导航后自动截图（保存至默认目录）";
         chkAutoScreenshot.Checked = true;
-
-        txtScreenshotPath.Location = new System.Drawing.Point(410, 198);
-        txtScreenshotPath.Size = new System.Drawing.Size(285, 23);
-        txtScreenshotPath.ReadOnly = true;
-        txtScreenshotPath.TabStop = false;
-
-        btnPickScreenshot.Location = new System.Drawing.Point(705, 197);
-        btnPickScreenshot.Size = new System.Drawing.Size(80, 25);
-        btnPickScreenshot.Text = "保存到…";
-        btnPickScreenshot.Enabled = false;
-        btnPickScreenshot.Click += btnPickScreenshot_Click;
 
         // Row 3: logging & snapshot
         btnStartLogging.Location = new System.Drawing.Point(12, 235);
@@ -278,7 +232,7 @@ partial class MainForm
         btnSaveSnapshot.Text = "保存快照 (HTML+PNG+JSON)";
         btnSaveSnapshot.Click += btnSaveSnapshot_Click;
 
-        // —— 代理 / TLS / 下载 ——
+        // —— 代理 / TLS ——
         lblProxy.AutoSize = true;
         lblProxy.Location = new System.Drawing.Point(12, 270);
         lblProxy.Text = "代理(--proxy-server)：";
@@ -290,21 +244,6 @@ partial class MainForm
         chkIgnoreTls.AutoSize = true;
         chkIgnoreTls.Text = "忽略 TLS 证书错误 (IgnoreHTTPSErrors)";
         chkIgnoreTls.Checked = false;
-
-        lblDownloadDir.AutoSize = true;
-        lblDownloadDir.Location = new System.Drawing.Point(12, 300);
-        lblDownloadDir.Text = "下载目录：";
-
-        txtDownloadDir.Location = new System.Drawing.Point(150, 297);
-        txtDownloadDir.Size = new System.Drawing.Size(430, 23);
-        txtDownloadDir.ReadOnly = true;
-        txtDownloadDir.TabStop = false;
-
-        btnPickDownloadDir.Location = new System.Drawing.Point(590, 296);
-        btnPickDownloadDir.Size = new System.Drawing.Size(70, 25);
-        btnPickDownloadDir.Text = "选择…";
-        btnPickDownloadDir.Enabled = false;
-        btnPickDownloadDir.Click += btnPickDownloadDir_Click;
 
         // —— 脚本注入 ——
         chkInitScript.Location = new System.Drawing.Point(12, 330);
@@ -394,13 +333,10 @@ partial class MainForm
         ClientSize = new System.Drawing.Size(800, 740);
         Controls.Add(lblExe);
         Controls.Add(lblPort);
-        Controls.Add(lblUserData);
         Controls.Add(lblUrl);
         Controls.Add(txtExePath);
         Controls.Add(btnBrowseExe);
         Controls.Add(numPort);
-        Controls.Add(txtUserDataDir);
-        Controls.Add(btnPickUserData);
         Controls.Add(txtStartUrl);
 
         Controls.Add(btnLaunch);
@@ -413,8 +349,6 @@ partial class MainForm
         Controls.Add(btnRunAll);
         Controls.Add(btnResetRunAll);
         Controls.Add(chkAutoScreenshot);
-        Controls.Add(txtScreenshotPath);
-        Controls.Add(btnPickScreenshot);
 
         Controls.Add(btnStartLogging);
         Controls.Add(btnStopLogging);
@@ -423,10 +357,6 @@ partial class MainForm
         Controls.Add(lblProxy);
         Controls.Add(txtProxy);
         Controls.Add(chkIgnoreTls);
-
-        Controls.Add(lblDownloadDir);
-        Controls.Add(txtDownloadDir);
-        Controls.Add(btnPickDownloadDir);
 
         Controls.Add(chkInitScript);
         Controls.Add(txtInitScript);

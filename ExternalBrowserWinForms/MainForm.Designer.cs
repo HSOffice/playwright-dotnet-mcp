@@ -5,551 +5,448 @@ namespace ExternalBrowserWinForms;
 
 partial class MainForm
 {
-    private System.ComponentModel.IContainer components = null!;
+    private System.ComponentModel.IContainer components = null;
+
+    private System.Windows.Forms.TextBox txtExePath;
+    private System.Windows.Forms.Button btnBrowseExe;
+    private System.Windows.Forms.NumericUpDown numPort;
+    private System.Windows.Forms.TextBox txtUserDataDir;
+    private System.Windows.Forms.Button btnPickUserData;
+    private System.Windows.Forms.TextBox txtStartUrl;
+
+    private System.Windows.Forms.Button btnLaunch;
+    private System.Windows.Forms.Button btnWaitDevTools;
+    private System.Windows.Forms.Button btnConnect;
+    private System.Windows.Forms.Button btnNewPage;
+    private System.Windows.Forms.Button btnGoto;
+    private System.Windows.Forms.Button btnCloseAll;
+
+    private System.Windows.Forms.TextBox txtLog;
+
+    private System.Windows.Forms.Label lblExe;
+    private System.Windows.Forms.Label lblPort;
+    private System.Windows.Forms.Label lblUserData;
+    private System.Windows.Forms.Label lblUrl;
+
+    private System.Windows.Forms.Button btnRunAll;
+    private System.Windows.Forms.Button btnResetRunAll;
+    private System.Windows.Forms.CheckBox chkAutoScreenshot;
+    private System.Windows.Forms.TextBox txtScreenshotPath;
+    private System.Windows.Forms.Button btnPickScreenshot;
+
+    private System.Windows.Forms.Button btnStartLogging;
+    private System.Windows.Forms.Button btnStopLogging;
+    private System.Windows.Forms.Button btnSaveSnapshot;
+
+    private System.Windows.Forms.ListBox lstPages;
+    private System.Windows.Forms.Label lblPages;
+
+    private System.Windows.Forms.Label lblProxy;
+    private System.Windows.Forms.TextBox txtProxy;
+    private System.Windows.Forms.CheckBox chkIgnoreTls;
+
+    private System.Windows.Forms.Label lblDownloadDir;
+    private System.Windows.Forms.TextBox txtDownloadDir;
+    private System.Windows.Forms.Button btnPickDownloadDir;
+
+    private System.Windows.Forms.CheckBox chkInitScript;
+    private System.Windows.Forms.TextBox txtInitScript;
+
+    private System.Windows.Forms.CheckBox chkPostNavScript;
+    private System.Windows.Forms.TextBox txtPostNavScript;
+
+    private System.Windows.Forms.CheckBox chkExposeDotnet;
+    private System.Windows.Forms.TextBox txtExposeName;
+
+    private System.Windows.Forms.Label lblRetry;
+    private System.Windows.Forms.NumericUpDown numRetryCount;
+    private System.Windows.Forms.NumericUpDown numRetryDelayMs;
+
+    private System.Windows.Forms.Button btnExportJsonList;
+    private System.Windows.Forms.Button btnExportJsonProtocol;
+
+    private System.Windows.Forms.Button btnRefreshPages;
+    private System.Windows.Forms.TextBox txtNewTabUrl;
+    private System.Windows.Forms.Button btnOpenNewTab;
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && (components != null))
+            components.Dispose();
+        base.Dispose(disposing);
+    }
 
     private void InitializeComponent()
     {
         components = new System.ComponentModel.Container();
-        var splitContainer = new SplitContainer();
-        var leftPanel = new FlowLayoutPanel();
-        var grpLaunch = new GroupBox();
-        var launchLayout = new TableLayoutPanel();
-        var lblExe = new Label();
-        txtExePath = new TextBox();
-        btnBrowseExe = new Button();
-        var lblUserData = new Label();
-        txtUserDataDir = new TextBox();
-        btnPickUserData = new Button();
-        var lblPort = new Label();
-        numPort = new NumericUpDown();
-        var lblProxy = new Label();
-        txtProxy = new TextBox();
-        var lblStartUrl = new Label();
-        txtStartUrl = new TextBox();
-        btnLaunch = new Button();
-        btnWaitDevTools = new Button();
-        btnConnect = new Button();
-        btnNewPage = new Button();
-        btnGoto = new Button();
-        btnRunAll = new Button();
-        btnResetRunAll = new Button();
-        btnCloseAll = new Button();
-        var grpOptions = new GroupBox();
-        var optionsLayout = new TableLayoutPanel();
-        chkIgnoreTls = new CheckBox();
-        chkInitScript = new CheckBox();
-        txtInitScript = new TextBox();
-        chkExposeDotnet = new CheckBox();
-        txtExposeName = new TextBox();
-        chkPostNavScript = new CheckBox();
-        txtPostNavScript = new TextBox();
-        chkAutoScreenshot = new CheckBox();
-        var lblScreenshot = new Label();
-        txtScreenshotPath = new TextBox();
-        btnPickScreenshot = new Button();
-        var lblDownload = new Label();
-        txtDownloadDir = new TextBox();
-        btnPickDownloadDir = new Button();
-        var lblRetryCount = new Label();
-        numRetryCount = new NumericUpDown();
-        var lblRetryDelay = new Label();
-        numRetryDelayMs = new NumericUpDown();
-        var grpPages = new GroupBox();
-        var pagesLayout = new TableLayoutPanel();
-        lstPages = new ListBox();
-        btnRefreshPages = new Button();
-        btnOpenNewTab = new Button();
-        var lblNewTabUrl = new Label();
-        txtNewTabUrl = new TextBox();
-        var grpLogging = new GroupBox();
-        var loggingLayout = new FlowLayoutPanel();
-        btnStartLogging = new Button();
-        btnStopLogging = new Button();
-        btnSaveSnapshot = new Button();
-        btnExportJsonList = new Button();
-        btnExportJsonProtocol = new Button();
-        splitContainer.Panel1.SuspendLayout();
-        splitContainer.Panel2.SuspendLayout();
-        splitContainer.SuspendLayout();
-        leftPanel.SuspendLayout();
-        grpLaunch.SuspendLayout();
-        launchLayout.SuspendLayout();
+
+        txtExePath = new System.Windows.Forms.TextBox();
+        btnBrowseExe = new System.Windows.Forms.Button();
+        numPort = new System.Windows.Forms.NumericUpDown();
+        txtUserDataDir = new System.Windows.Forms.TextBox();
+        btnPickUserData = new System.Windows.Forms.Button();
+        txtStartUrl = new System.Windows.Forms.TextBox();
+
+        btnLaunch = new System.Windows.Forms.Button();
+        btnWaitDevTools = new System.Windows.Forms.Button();
+        btnConnect = new System.Windows.Forms.Button();
+        btnNewPage = new System.Windows.Forms.Button();
+        btnGoto = new System.Windows.Forms.Button();
+        btnCloseAll = new System.Windows.Forms.Button();
+
+        txtLog = new System.Windows.Forms.TextBox();
+
+        lblExe = new System.Windows.Forms.Label();
+        lblPort = new System.Windows.Forms.Label();
+        lblUserData = new System.Windows.Forms.Label();
+        lblUrl = new System.Windows.Forms.Label();
+
+        btnRunAll = new System.Windows.Forms.Button();
+        btnResetRunAll = new System.Windows.Forms.Button();
+        chkAutoScreenshot = new System.Windows.Forms.CheckBox();
+        txtScreenshotPath = new System.Windows.Forms.TextBox();
+        btnPickScreenshot = new System.Windows.Forms.Button();
+
+        btnStartLogging = new System.Windows.Forms.Button();
+        btnStopLogging = new System.Windows.Forms.Button();
+        btnSaveSnapshot = new System.Windows.Forms.Button();
+
+        lstPages = new System.Windows.Forms.ListBox();
+        lblPages = new System.Windows.Forms.Label();
+
+        lblProxy = new System.Windows.Forms.Label();
+        txtProxy = new System.Windows.Forms.TextBox();
+        chkIgnoreTls = new System.Windows.Forms.CheckBox();
+
+        lblDownloadDir = new System.Windows.Forms.Label();
+        txtDownloadDir = new System.Windows.Forms.TextBox();
+        btnPickDownloadDir = new System.Windows.Forms.Button();
+
+        chkInitScript = new System.Windows.Forms.CheckBox();
+        txtInitScript = new System.Windows.Forms.TextBox();
+
+        chkPostNavScript = new System.Windows.Forms.CheckBox();
+        txtPostNavScript = new System.Windows.Forms.TextBox();
+
+        chkExposeDotnet = new System.Windows.Forms.CheckBox();
+        txtExposeName = new System.Windows.Forms.TextBox();
+
+        lblRetry = new System.Windows.Forms.Label();
+        numRetryCount = new System.Windows.Forms.NumericUpDown();
+        numRetryDelayMs = new System.Windows.Forms.NumericUpDown();
+
+        btnExportJsonList = new System.Windows.Forms.Button();
+        btnExportJsonProtocol = new System.Windows.Forms.Button();
+
+        btnRefreshPages = new System.Windows.Forms.Button();
+        txtNewTabUrl = new System.Windows.Forms.TextBox();
+        btnOpenNewTab = new System.Windows.Forms.Button();
+
         ((System.ComponentModel.ISupportInitialize)numPort).BeginInit();
-        grpOptions.SuspendLayout();
-        optionsLayout.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)numRetryCount).BeginInit();
         ((System.ComponentModel.ISupportInitialize)numRetryDelayMs).BeginInit();
-        grpPages.SuspendLayout();
-        pagesLayout.SuspendLayout();
-        grpLogging.SuspendLayout();
-        loggingLayout.SuspendLayout();
         SuspendLayout();
-        // 
-        // splitContainer
-        // 
-        splitContainer.Dock = DockStyle.Fill;
-        splitContainer.Name = "splitContainer";
-        splitContainer.SplitterDistance = 420;
-        splitContainer.TabIndex = 0;
-        // 
-        // splitContainer.Panel1
-        // 
-        splitContainer.Panel1.Controls.Add(leftPanel);
-        // 
-        // splitContainer.Panel2
-        // 
-        txtLog = new TextBox();
-        txtLog.Dock = DockStyle.Fill;
-        txtLog.Multiline = true;
-        txtLog.ScrollBars = ScrollBars.Vertical;
-        txtLog.ReadOnly = true;
-        splitContainer.Panel2.Controls.Add(txtLog);
-        // 
-        // leftPanel
-        // 
-        leftPanel.Dock = DockStyle.Fill;
-        leftPanel.FlowDirection = FlowDirection.TopDown;
-        leftPanel.WrapContents = false;
-        leftPanel.AutoScroll = true;
-        leftPanel.Controls.Add(grpLaunch);
-        leftPanel.Controls.Add(grpOptions);
-        leftPanel.Controls.Add(grpPages);
-        leftPanel.Controls.Add(grpLogging);
-        // 
-        // grpLaunch
-        // 
-        grpLaunch.Text = "启动";
-        grpLaunch.AutoSize = true;
-        grpLaunch.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        grpLaunch.Controls.Add(launchLayout);
-        // 
-        // launchLayout
-        // 
-        launchLayout.ColumnCount = 3;
-        launchLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
-        launchLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        launchLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
-        launchLayout.RowCount = 10;
-        for (var i = 0; i < launchLayout.RowCount; i++)
-        {
-            launchLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        }
-        launchLayout.Dock = DockStyle.Fill;
-        launchLayout.Controls.Add(lblExe, 0, 0);
-        launchLayout.Controls.Add(txtExePath, 1, 0);
-        launchLayout.Controls.Add(btnBrowseExe, 2, 0);
-        launchLayout.Controls.Add(lblUserData, 0, 1);
-        launchLayout.Controls.Add(txtUserDataDir, 1, 1);
-        launchLayout.Controls.Add(btnPickUserData, 2, 1);
-        launchLayout.Controls.Add(lblPort, 0, 2);
-        launchLayout.Controls.Add(numPort, 1, 2);
-        launchLayout.Controls.Add(lblProxy, 0, 3);
-        launchLayout.Controls.Add(txtProxy, 1, 3);
-        launchLayout.Controls.Add(lblStartUrl, 0, 4);
-        launchLayout.Controls.Add(txtStartUrl, 1, 4);
-        launchLayout.SetColumnSpan(txtStartUrl, 2);
-        launchLayout.Controls.Add(btnLaunch, 0, 5);
-        launchLayout.SetColumnSpan(btnLaunch, 3);
-        launchLayout.Controls.Add(btnWaitDevTools, 0, 6);
-        launchLayout.SetColumnSpan(btnWaitDevTools, 3);
-        launchLayout.Controls.Add(btnConnect, 0, 7);
-        launchLayout.SetColumnSpan(btnConnect, 3);
-        var flowLaunchActions = new FlowLayoutPanel();
-        flowLaunchActions.AutoSize = true;
-        flowLaunchActions.Controls.Add(btnNewPage);
-        flowLaunchActions.Controls.Add(btnGoto);
-        flowLaunchActions.Controls.Add(btnCloseAll);
-        launchLayout.Controls.Add(flowLaunchActions, 0, 8);
-        launchLayout.SetColumnSpan(flowLaunchActions, 3);
-        var flowRunAll = new FlowLayoutPanel();
-        flowRunAll.AutoSize = true;
-        flowRunAll.Controls.Add(btnRunAll);
-        flowRunAll.Controls.Add(btnResetRunAll);
-        launchLayout.Controls.Add(flowRunAll, 0, 9);
-        launchLayout.SetColumnSpan(flowRunAll, 3);
-        // 
-        // lblExe
-        // 
+
+        // Labels
         lblExe.AutoSize = true;
-        lblExe.Text = "EXE";
-        // 
-        // txtExePath
-        // 
-        txtExePath.Dock = DockStyle.Fill;
-        // 
-        // btnBrowseExe
-        // 
-        btnBrowseExe.Text = "浏览";
-        btnBrowseExe.Click += btnBrowseExe_Click;
-        // 
-        // lblUserData
-        // 
-        lblUserData.AutoSize = true;
-        lblUserData.Text = "UserData";
-        // 
-        // txtUserDataDir
-        // 
-        txtUserDataDir.Dock = DockStyle.Fill;
-        // 
-        // btnPickUserData
-        // 
-        btnPickUserData.Text = "选择";
-        btnPickUserData.Click += btnPickUserData_Click;
-        // 
-        // lblPort
-        // 
+        lblExe.Location = new System.Drawing.Point(12, 15);
+        lblExe.Text = "可执行文件：";
+
         lblPort.AutoSize = true;
-        lblPort.Text = "端口";
-        // 
+        lblPort.Location = new System.Drawing.Point(12, 50);
+        lblPort.Text = "调试端口：";
+
+        lblUserData.AutoSize = true;
+        lblUserData.Location = new System.Drawing.Point(12, 85);
+        lblUserData.Text = "UserDataDir：";
+
+        lblUrl.AutoSize = true;
+        lblUrl.Location = new System.Drawing.Point(12, 120);
+        lblUrl.Text = "起始 URL：";
+
+        // txtExePath
+        txtExePath.Location = new System.Drawing.Point(100, 12);
+        txtExePath.Size = new System.Drawing.Size(600, 23);
+
+        // btnBrowseExe
+        btnBrowseExe.Location = new System.Drawing.Point(710, 11);
+        btnBrowseExe.Size = new System.Drawing.Size(75, 25);
+        btnBrowseExe.Text = "浏览…";
+        btnBrowseExe.Click += btnBrowseExe_Click;
+
         // numPort
-        // 
-        numPort.Dock = DockStyle.Fill;
-        numPort.Maximum = 65535;
+        numPort.Location = new System.Drawing.Point(100, 47);
         numPort.Minimum = 1;
+        numPort.Maximum = 65535;
         numPort.Value = 9222;
-        // 
-        // lblProxy
-        // 
-        lblProxy.AutoSize = true;
-        lblProxy.Text = "代理";
-        // 
-        // txtProxy
-        // 
-        txtProxy.Dock = DockStyle.Fill;
-        launchLayout.SetColumnSpan(txtProxy, 2);
-        // 
-        // lblStartUrl
-        // 
-        lblStartUrl.AutoSize = true;
-        lblStartUrl.Text = "起始 URL";
-        // 
+        numPort.Size = new System.Drawing.Size(120, 23);
+
+        // txtUserDataDir
+        txtUserDataDir.Location = new System.Drawing.Point(100, 82);
+        txtUserDataDir.Size = new System.Drawing.Size(600, 23);
+
+        // btnPickUserData
+        btnPickUserData.Location = new System.Drawing.Point(710, 81);
+        btnPickUserData.Size = new System.Drawing.Size(75, 25);
+        btnPickUserData.Text = "选择…";
+        btnPickUserData.Click += btnPickUserData_Click;
+
         // txtStartUrl
-        // 
-        txtStartUrl.Dock = DockStyle.Fill;
-        // 
-        // btnLaunch
-        // 
-        btnLaunch.Text = "启动进程";
+        txtStartUrl.Location = new System.Drawing.Point(100, 117);
+        txtStartUrl.Size = new System.Drawing.Size(685, 23);
+
+        // Buttons row 1 (step-by-step)
+        btnLaunch.Location = new System.Drawing.Point(12, 155);
+        btnLaunch.Size = new System.Drawing.Size(110, 30);
+        btnLaunch.Text = "1) 启动进程";
         btnLaunch.Click += btnLaunch_Click;
-        // 
-        // btnWaitDevTools
-        // 
-        btnWaitDevTools.Text = "等待 DevTools";
+
+        btnWaitDevTools.Location = new System.Drawing.Point(132, 155);
+        btnWaitDevTools.Size = new System.Drawing.Size(140, 30);
+        btnWaitDevTools.Text = "2) 等待 DevTools";
         btnWaitDevTools.Enabled = false;
         btnWaitDevTools.Click += btnWaitDevTools_Click;
-        // 
-        // btnConnect
-        // 
-        btnConnect.Text = "连接";
+
+        btnConnect.Location = new System.Drawing.Point(280, 155);
+        btnConnect.Size = new System.Drawing.Size(140, 30);
+        btnConnect.Text = "3) 连接 Playwright";
         btnConnect.Enabled = false;
         btnConnect.Click += btnConnect_Click;
-        // 
-        // btnNewPage
-        // 
-        btnNewPage.Text = "新建页面";
+
+        btnNewPage.Location = new System.Drawing.Point(428, 155);
+        btnNewPage.Size = new System.Drawing.Size(130, 30);
+        btnNewPage.Text = "4) 新建 Page";
         btnNewPage.Enabled = false;
         btnNewPage.Click += btnNewPage_Click;
-        // 
-        // btnGoto
-        // 
-        btnGoto.Text = "导航";
+
+        btnGoto.Location = new System.Drawing.Point(566, 155);
+        btnGoto.Size = new System.Drawing.Size(110, 30);
+        btnGoto.Text = "5) 访问 URL";
         btnGoto.Enabled = false;
         btnGoto.Click += btnGoto_Click;
-        // 
-        // btnCloseAll
-        // 
-        btnCloseAll.Text = "关闭所有";
+
+        btnCloseAll.Location = new System.Drawing.Point(684, 155);
+        btnCloseAll.Size = new System.Drawing.Size(101, 30);
+        btnCloseAll.Text = "清理/退出";
         btnCloseAll.Enabled = false;
         btnCloseAll.Click += btnCloseAll_Click;
-        // 
-        // btnRunAll
-        // 
+
+        // Row 2: Run-all, reset-run-all, screenshot options
+        btnRunAll.Location = new System.Drawing.Point(12, 195);
+        btnRunAll.Size = new System.Drawing.Size(110, 30);
         btnRunAll.Text = "一键运行";
         btnRunAll.Click += btnRunAll_Click;
-        // 
-        // btnResetRunAll
-        // 
-        btnResetRunAll.Text = "重置并运行";
+
+        btnResetRunAll.Location = new System.Drawing.Point(132, 195);
+        btnResetRunAll.Size = new System.Drawing.Size(140, 30);
+        btnResetRunAll.Text = "重置并全跑";
         btnResetRunAll.Click += btnResetRunAll_Click;
-        // 
-        // grpOptions
-        // 
-        grpOptions.Text = "选项";
-        grpOptions.AutoSize = true;
-        grpOptions.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        grpOptions.Controls.Add(optionsLayout);
-        // 
-        // optionsLayout
-        // 
-        optionsLayout.ColumnCount = 3;
-        optionsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
-        optionsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        optionsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
-        optionsLayout.RowCount = 11;
-        for (var i = 0; i < optionsLayout.RowCount; i++)
-        {
-            optionsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        }
-        optionsLayout.Dock = DockStyle.Fill;
-        optionsLayout.Controls.Add(chkIgnoreTls, 0, 0);
-        optionsLayout.SetColumnSpan(chkIgnoreTls, 3);
-        optionsLayout.Controls.Add(chkInitScript, 0, 1);
-        optionsLayout.SetColumnSpan(chkInitScript, 3);
-        optionsLayout.Controls.Add(txtInitScript, 0, 2);
-        optionsLayout.SetColumnSpan(txtInitScript, 3);
-        optionsLayout.Controls.Add(chkExposeDotnet, 0, 3);
-        optionsLayout.Controls.Add(txtExposeName, 1, 3);
-        optionsLayout.Controls.Add(chkPostNavScript, 0, 4);
-        optionsLayout.SetColumnSpan(chkPostNavScript, 3);
-        optionsLayout.Controls.Add(txtPostNavScript, 0, 5);
-        optionsLayout.SetColumnSpan(txtPostNavScript, 3);
-        optionsLayout.Controls.Add(chkAutoScreenshot, 0, 6);
-        optionsLayout.SetColumnSpan(chkAutoScreenshot, 3);
-        optionsLayout.Controls.Add(lblScreenshot, 0, 7);
-        optionsLayout.Controls.Add(txtScreenshotPath, 1, 7);
-        optionsLayout.Controls.Add(btnPickScreenshot, 2, 7);
-        optionsLayout.Controls.Add(lblDownload, 0, 8);
-        optionsLayout.Controls.Add(txtDownloadDir, 1, 8);
-        optionsLayout.Controls.Add(btnPickDownloadDir, 2, 8);
-        optionsLayout.Controls.Add(lblRetryCount, 0, 9);
-        optionsLayout.Controls.Add(numRetryCount, 1, 9);
-        optionsLayout.Controls.Add(lblRetryDelay, 0, 10);
-        optionsLayout.Controls.Add(numRetryDelayMs, 1, 10);
-        // 
-        // chkIgnoreTls
-        // 
-        chkIgnoreTls.AutoSize = true;
-        chkIgnoreTls.Text = "忽略 TLS 错误";
-        // 
-        // chkInitScript
-        // 
-        chkInitScript.AutoSize = true;
-        chkInitScript.Text = "注册 Init Script";
-        // 
-        // txtInitScript
-        // 
-        txtInitScript.Multiline = true;
-        txtInitScript.Height = 60;
-        txtInitScript.ScrollBars = ScrollBars.Vertical;
-        // 
-        // chkExposeDotnet
-        // 
-        chkExposeDotnet.AutoSize = true;
-        chkExposeDotnet.Text = "暴露 .NET 方法";
-        // 
-        // txtExposeName
-        // 
-        txtExposeName.Dock = DockStyle.Fill;
-        // 
-        // chkPostNavScript
-        // 
-        chkPostNavScript.AutoSize = true;
-        chkPostNavScript.Text = "导航后执行脚本";
-        // 
-        // txtPostNavScript
-        // 
-        txtPostNavScript.Multiline = true;
-        txtPostNavScript.Height = 60;
-        txtPostNavScript.ScrollBars = ScrollBars.Vertical;
-        // 
-        // chkAutoScreenshot
-        // 
+
+        chkAutoScreenshot.Location = new System.Drawing.Point(290, 200);
         chkAutoScreenshot.AutoSize = true;
-        chkAutoScreenshot.Text = "自动截图";
-        // 
-        // lblScreenshot
-        // 
-        lblScreenshot.AutoSize = true;
-        lblScreenshot.Text = "截图路径";
-        // 
-        // txtScreenshotPath
-        // 
-        txtScreenshotPath.Dock = DockStyle.Fill;
-        // 
-        // btnPickScreenshot
-        // 
-        btnPickScreenshot.Text = "选择";
+        chkAutoScreenshot.Text = "导航后自动截图";
+        chkAutoScreenshot.Checked = true;
+
+        txtScreenshotPath.Location = new System.Drawing.Point(410, 198);
+        txtScreenshotPath.Size = new System.Drawing.Size(285, 23);
+
+        btnPickScreenshot.Location = new System.Drawing.Point(705, 197);
+        btnPickScreenshot.Size = new System.Drawing.Size(80, 25);
+        btnPickScreenshot.Text = "保存到…";
         btnPickScreenshot.Click += btnPickScreenshot_Click;
-        // 
-        // lblDownload
-        // 
-        lblDownload.AutoSize = true;
-        lblDownload.Text = "下载目录";
-        // 
-        // txtDownloadDir
-        // 
-        txtDownloadDir.Dock = DockStyle.Fill;
-        // 
-        // btnPickDownloadDir
-        // 
-        btnPickDownloadDir.Text = "选择";
-        btnPickDownloadDir.Click += btnPickDownloadDir_Click;
-        // 
-        // lblRetryCount
-        // 
-        lblRetryCount.AutoSize = true;
-        lblRetryCount.Text = "重试次数";
-        // 
-        // numRetryCount
-        // 
-        numRetryCount.Dock = DockStyle.Fill;
-        numRetryCount.Minimum = 0;
-        numRetryCount.Maximum = 10;
-        // 
-        // lblRetryDelay
-        // 
-        lblRetryDelay.AutoSize = true;
-        lblRetryDelay.Text = "重试间隔(ms)";
-        // 
-        // numRetryDelayMs
-        // 
-        numRetryDelayMs.Dock = DockStyle.Fill;
-        numRetryDelayMs.Maximum = 60000;
-        numRetryDelayMs.Value = 1000;
-        // 
-        // grpPages
-        // 
-        grpPages.Text = "页面";
-        grpPages.AutoSize = true;
-        grpPages.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        grpPages.Controls.Add(pagesLayout);
-        // 
-        // pagesLayout
-        // 
-        pagesLayout.ColumnCount = 2;
-        pagesLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        pagesLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
-        pagesLayout.RowCount = 4;
-        for (var i = 0; i < pagesLayout.RowCount; i++)
-        {
-            pagesLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        }
-        pagesLayout.Dock = DockStyle.Fill;
-        pagesLayout.Controls.Add(lstPages, 0, 0);
-        pagesLayout.SetColumnSpan(lstPages, 2);
-        lstPages.Dock = DockStyle.Fill;
-        lstPages.Height = 120;
-        lstPages.SelectedIndexChanged += lstPages_SelectedIndexChanged;
-        pagesLayout.Controls.Add(btnRefreshPages, 0, 1);
-        btnRefreshPages.Text = "刷新";
-        btnRefreshPages.Click += btnRefreshPages_Click;
-        pagesLayout.Controls.Add(btnOpenNewTab, 1, 1);
-        btnOpenNewTab.Text = "打开新标签";
-        btnOpenNewTab.Click += btnOpenNewTab_Click;
-        pagesLayout.Controls.Add(lblNewTabUrl, 0, 2);
-        lblNewTabUrl.AutoSize = true;
-        lblNewTabUrl.Text = "新标签 URL";
-        pagesLayout.Controls.Add(txtNewTabUrl, 0, 3);
-        pagesLayout.SetColumnSpan(txtNewTabUrl, 2);
-        txtNewTabUrl.Dock = DockStyle.Fill;
-        // 
-        // grpLogging
-        // 
-        grpLogging.Text = "日志与快照";
-        grpLogging.AutoSize = true;
-        grpLogging.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        grpLogging.Controls.Add(loggingLayout);
-        loggingLayout.AutoSize = true;
-        loggingLayout.FlowDirection = FlowDirection.LeftToRight;
-        loggingLayout.WrapContents = true;
-        loggingLayout.Controls.Add(btnStartLogging);
-        loggingLayout.Controls.Add(btnStopLogging);
-        loggingLayout.Controls.Add(btnSaveSnapshot);
-        loggingLayout.Controls.Add(btnExportJsonList);
-        loggingLayout.Controls.Add(btnExportJsonProtocol);
+
+        // Row 3: logging & snapshot
+        btnStartLogging.Location = new System.Drawing.Point(12, 235);
+        btnStartLogging.Size = new System.Drawing.Size(110, 30);
         btnStartLogging.Text = "开始日志";
         btnStartLogging.Click += btnStartLogging_Click;
+
+        btnStopLogging.Location = new System.Drawing.Point(132, 235);
+        btnStopLogging.Size = new System.Drawing.Size(110, 30);
         btnStopLogging.Text = "停止日志";
         btnStopLogging.Enabled = false;
         btnStopLogging.Click += btnStopLogging_Click;
-        btnSaveSnapshot.Text = "保存快照";
+
+        btnSaveSnapshot.Location = new System.Drawing.Point(252, 235);
+        btnSaveSnapshot.Size = new System.Drawing.Size(130, 30);
+        btnSaveSnapshot.Text = "保存快照 (HTML+PNG+JSON)";
         btnSaveSnapshot.Click += btnSaveSnapshot_Click;
-        btnExportJsonList.Text = "/json/list";
+
+        // —— 代理 / TLS / 下载 ——
+        lblProxy.AutoSize = true;
+        lblProxy.Location = new System.Drawing.Point(12, 270);
+        lblProxy.Text = "代理(--proxy-server)：";
+
+        txtProxy.Location = new System.Drawing.Point(150, 267);
+        txtProxy.Size = new System.Drawing.Size(250, 23);
+
+        chkIgnoreTls.Location = new System.Drawing.Point(420, 268);
+        chkIgnoreTls.AutoSize = true;
+        chkIgnoreTls.Text = "忽略 TLS 证书错误 (IgnoreHTTPSErrors)";
+        chkIgnoreTls.Checked = false;
+
+        lblDownloadDir.AutoSize = true;
+        lblDownloadDir.Location = new System.Drawing.Point(12, 300);
+        lblDownloadDir.Text = "下载目录：";
+
+        txtDownloadDir.Location = new System.Drawing.Point(150, 297);
+        txtDownloadDir.Size = new System.Drawing.Size(430, 23);
+
+        btnPickDownloadDir.Location = new System.Drawing.Point(590, 296);
+        btnPickDownloadDir.Size = new System.Drawing.Size(70, 25);
+        btnPickDownloadDir.Text = "选择…";
+        btnPickDownloadDir.Click += btnPickDownloadDir_Click;
+
+        // —— 脚本注入 ——
+        chkInitScript.Location = new System.Drawing.Point(12, 330);
+        chkInitScript.AutoSize = true;
+        chkInitScript.Text = "AddInitScript（所有页面自动注入）";
+
+        txtInitScript.Location = new System.Drawing.Point(12, 350);
+        txtInitScript.Size = new System.Drawing.Size(370, 23);
+
+        chkPostNavScript.Location = new System.Drawing.Point(400, 330);
+        chkPostNavScript.AutoSize = true;
+        chkPostNavScript.Text = "导航后执行 Evaluate";
+
+        txtPostNavScript.Location = new System.Drawing.Point(400, 350);
+        txtPostNavScript.Size = new System.Drawing.Size(370, 23);
+
+        chkExposeDotnet.Location = new System.Drawing.Point(12, 380);
+        chkExposeDotnet.AutoSize = true;
+        chkExposeDotnet.Text = "暴露 .NET 方法到页面 (ExposeFunction)";
+        chkExposeDotnet.Checked = false;
+
+        txtExposeName.Location = new System.Drawing.Point(280, 378);
+        txtExposeName.Size = new System.Drawing.Size(150, 23);
+        txtExposeName.Text = "dotnetPing";
+
+        // —— 重试设置 ——
+        lblRetry.AutoSize = true;
+        lblRetry.Location = new System.Drawing.Point(450, 382);
+        lblRetry.Text = "重试(次/毫秒)：";
+
+        numRetryCount.Location = new System.Drawing.Point(540, 380);
+        numRetryCount.Minimum = 0;
+        numRetryCount.Maximum = 10;
+        numRetryCount.Value = 2;
+
+        numRetryDelayMs.Location = new System.Drawing.Point(610, 380);
+        numRetryDelayMs.Minimum = 0;
+        numRetryDelayMs.Maximum = 30000;
+        numRetryDelayMs.Increment = 250;
+        numRetryDelayMs.Value = 1000;
+
+        // —— /json 导出 ——
+        btnExportJsonList.Location = new System.Drawing.Point(12, 410);
+        btnExportJsonList.Size = new System.Drawing.Size(140, 28);
+        btnExportJsonList.Text = "导出 /json/list";
         btnExportJsonList.Click += btnExportJsonList_Click;
-        btnExportJsonProtocol.Text = "/json/protocol";
+
+        btnExportJsonProtocol.Location = new System.Drawing.Point(160, 410);
+        btnExportJsonProtocol.Size = new System.Drawing.Size(140, 28);
+        btnExportJsonProtocol.Text = "导出 /json/protocol";
         btnExportJsonProtocol.Click += btnExportJsonProtocol_Click;
-        // 
-        // MainForm
-        // 
-        AutoScaleDimensions = new SizeF(7F, 15F);
-        AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1200, 800);
-        Controls.Add(splitContainer);
-        Text = "External Browser Controller";
-        splitContainer.Panel1.ResumeLayout(false);
-        splitContainer.Panel2.ResumeLayout(false);
-        splitContainer.Panel2.PerformLayout();
-        splitContainer.ResumeLayout(false);
-        leftPanel.ResumeLayout(false);
-        leftPanel.PerformLayout();
-        grpLaunch.ResumeLayout(false);
-        grpLaunch.PerformLayout();
-        launchLayout.ResumeLayout(false);
-        launchLayout.PerformLayout();
+
+        // —— 多页辅助 ——
+        btnRefreshPages.Location = new System.Drawing.Point(310, 410);
+        btnRefreshPages.Size = new System.Drawing.Size(110, 28);
+        btnRefreshPages.Text = "刷新页面列表";
+        btnRefreshPages.Click += btnRefreshPages_Click;
+
+        txtNewTabUrl.Location = new System.Drawing.Point(430, 412);
+        txtNewTabUrl.Size = new System.Drawing.Size(260, 23);
+        txtNewTabUrl.Text = "https://example.com";
+
+        btnOpenNewTab.Location = new System.Drawing.Point(700, 410);
+        btnOpenNewTab.Size = new System.Drawing.Size(70, 28);
+        btnOpenNewTab.Text = "新开Tab";
+        btnOpenNewTab.Click += btnOpenNewTab_Click;
+
+        // Page list & log (moved down)
+        lblPages.AutoSize = true;
+        lblPages.Location = new System.Drawing.Point(12, 445);
+        lblPages.Text = "页面 (Pages)：";
+
+        lstPages.Location = new System.Drawing.Point(12, 465);
+        lstPages.Size = new System.Drawing.Size(240, 250);
+        lstPages.SelectedIndexChanged += lstPages_SelectedIndexChanged;
+
+        txtLog.Location = new System.Drawing.Point(260, 465);
+        txtLog.Multiline = true;
+        txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+        txtLog.WordWrap = false;
+        txtLog.Size = new System.Drawing.Size(525, 250);
+        txtLog.ReadOnly = true;
+
+        // Form
+        AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+        AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+        ClientSize = new System.Drawing.Size(800, 740);
+        Controls.Add(lblExe);
+        Controls.Add(lblPort);
+        Controls.Add(lblUserData);
+        Controls.Add(lblUrl);
+        Controls.Add(txtExePath);
+        Controls.Add(btnBrowseExe);
+        Controls.Add(numPort);
+        Controls.Add(txtUserDataDir);
+        Controls.Add(btnPickUserData);
+        Controls.Add(txtStartUrl);
+
+        Controls.Add(btnLaunch);
+        Controls.Add(btnWaitDevTools);
+        Controls.Add(btnConnect);
+        Controls.Add(btnNewPage);
+        Controls.Add(btnGoto);
+        Controls.Add(btnCloseAll);
+
+        Controls.Add(btnRunAll);
+        Controls.Add(btnResetRunAll);
+        Controls.Add(chkAutoScreenshot);
+        Controls.Add(txtScreenshotPath);
+        Controls.Add(btnPickScreenshot);
+
+        Controls.Add(btnStartLogging);
+        Controls.Add(btnStopLogging);
+        Controls.Add(btnSaveSnapshot);
+
+        Controls.Add(lblProxy);
+        Controls.Add(txtProxy);
+        Controls.Add(chkIgnoreTls);
+
+        Controls.Add(lblDownloadDir);
+        Controls.Add(txtDownloadDir);
+        Controls.Add(btnPickDownloadDir);
+
+        Controls.Add(chkInitScript);
+        Controls.Add(txtInitScript);
+        Controls.Add(chkPostNavScript);
+        Controls.Add(txtPostNavScript);
+
+        Controls.Add(chkExposeDotnet);
+        Controls.Add(txtExposeName);
+
+        Controls.Add(lblRetry);
+        Controls.Add(numRetryCount);
+        Controls.Add(numRetryDelayMs);
+
+        Controls.Add(btnExportJsonList);
+        Controls.Add(btnExportJsonProtocol);
+
+        Controls.Add(btnRefreshPages);
+        Controls.Add(txtNewTabUrl);
+        Controls.Add(btnOpenNewTab);
+
+        Controls.Add(lblPages);
+        Controls.Add(lstPages);
+        Controls.Add(txtLog);
+
+        Text = "External Browser (CDP) Launcher - WinForms";
         ((System.ComponentModel.ISupportInitialize)numPort).EndInit();
-        grpOptions.ResumeLayout(false);
-        grpOptions.PerformLayout();
-        optionsLayout.ResumeLayout(false);
-        optionsLayout.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)numRetryCount).EndInit();
         ((System.ComponentModel.ISupportInitialize)numRetryDelayMs).EndInit();
-        grpPages.ResumeLayout(false);
-        grpPages.PerformLayout();
-        pagesLayout.ResumeLayout(false);
-        pagesLayout.PerformLayout();
-        grpLogging.ResumeLayout(false);
-        grpLogging.PerformLayout();
-        loggingLayout.ResumeLayout(false);
-        loggingLayout.PerformLayout();
         ResumeLayout(false);
+        PerformLayout();
     }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            components?.Dispose();
-        }
-        base.Dispose(disposing);
-    }
-
-    private TextBox txtExePath = null!;
-    private Button btnBrowseExe = null!;
-    private TextBox txtUserDataDir = null!;
-    private Button btnPickUserData = null!;
-    private NumericUpDown numPort = null!;
-    private TextBox txtProxy = null!;
-    private TextBox txtStartUrl = null!;
-    private Button btnLaunch = null!;
-    private Button btnWaitDevTools = null!;
-    private Button btnConnect = null!;
-    private Button btnNewPage = null!;
-    private Button btnGoto = null!;
-    private Button btnCloseAll = null!;
-    private Button btnRunAll = null!;
-    private Button btnResetRunAll = null!;
-    private CheckBox chkIgnoreTls = null!;
-    private CheckBox chkInitScript = null!;
-    private TextBox txtInitScript = null!;
-    private CheckBox chkExposeDotnet = null!;
-    private TextBox txtExposeName = null!;
-    private CheckBox chkPostNavScript = null!;
-    private TextBox txtPostNavScript = null!;
-    private CheckBox chkAutoScreenshot = null!;
-    private TextBox txtScreenshotPath = null!;
-    private Button btnPickScreenshot = null!;
-    private TextBox txtDownloadDir = null!;
-    private Button btnPickDownloadDir = null!;
-    private NumericUpDown numRetryCount = null!;
-    private NumericUpDown numRetryDelayMs = null!;
-    private ListBox lstPages = null!;
-    private Button btnRefreshPages = null!;
-    private Button btnOpenNewTab = null!;
-    private TextBox txtNewTabUrl = null!;
-    private Button btnStartLogging = null!;
-    private Button btnStopLogging = null!;
-    private Button btnSaveSnapshot = null!;
-    private Button btnExportJsonList = null!;
-    private Button btnExportJsonProtocol = null!;
-    private TextBox txtLog = null!;
 }

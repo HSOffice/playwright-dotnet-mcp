@@ -184,11 +184,14 @@ partial class MainForm
         // txtUserDataDir
         txtUserDataDir.Location = new System.Drawing.Point(100, 82);
         txtUserDataDir.Size = new System.Drawing.Size(600, 23);
+        txtUserDataDir.ReadOnly = true;
+        txtUserDataDir.TabStop = false;
 
         // btnPickUserData
         btnPickUserData.Location = new System.Drawing.Point(710, 81);
         btnPickUserData.Size = new System.Drawing.Size(75, 25);
         btnPickUserData.Text = "选择…";
+        btnPickUserData.Enabled = false;
         btnPickUserData.Click += btnPickUserData_Click;
 
         // txtStartUrl
@@ -249,10 +252,13 @@ partial class MainForm
 
         txtScreenshotPath.Location = new System.Drawing.Point(410, 198);
         txtScreenshotPath.Size = new System.Drawing.Size(285, 23);
+        txtScreenshotPath.ReadOnly = true;
+        txtScreenshotPath.TabStop = false;
 
         btnPickScreenshot.Location = new System.Drawing.Point(705, 197);
         btnPickScreenshot.Size = new System.Drawing.Size(80, 25);
         btnPickScreenshot.Text = "保存到…";
+        btnPickScreenshot.Enabled = false;
         btnPickScreenshot.Click += btnPickScreenshot_Click;
 
         // Row 3: logging & snapshot
@@ -291,10 +297,13 @@ partial class MainForm
 
         txtDownloadDir.Location = new System.Drawing.Point(150, 297);
         txtDownloadDir.Size = new System.Drawing.Size(430, 23);
+        txtDownloadDir.ReadOnly = true;
+        txtDownloadDir.TabStop = false;
 
         btnPickDownloadDir.Location = new System.Drawing.Point(590, 296);
         btnPickDownloadDir.Size = new System.Drawing.Size(70, 25);
         btnPickDownloadDir.Text = "选择…";
+        btnPickDownloadDir.Enabled = false;
         btnPickDownloadDir.Click += btnPickDownloadDir_Click;
 
         // —— 脚本注入 ——

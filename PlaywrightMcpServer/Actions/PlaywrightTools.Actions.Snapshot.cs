@@ -56,7 +56,7 @@ public sealed partial class PlaywrightTools
             throw new ArgumentException("Element type must not be empty.", nameof(type));
         }
 
-        if (!TryNormalizeClickType(type, out var role, out var roleName))
+        if (!TryNormalizeClickType(type, out _, out var roleName))
         {
             throw new ArgumentException($"Unsupported element type '{type}'.", nameof(type));
         }
@@ -77,12 +77,7 @@ public sealed partial class PlaywrightTools
             async (response, token) =>
             {
                 var tab = await GetActiveTabAsync(token).ConfigureAwait(false);
-                var page = tab.Page;
-                var locator = page.GetByRole(role, new() { Name = @ref });
-
-                args["role"] = roleName;
-                args["name"] = @ref;
-                args["ref"] = @ref;
+                var locator = await tab.GetLocatorByRefAsync(element, @ref, token).ConfigureAwait(false);
 
                 var (mouseButton, buttonName) = NormalizeMouseButton(button);
                 var (modifierValues, modifierNames) = NormalizeModifiers(modifiers);
@@ -119,11 +114,11 @@ public sealed partial class PlaywrightTools
                             options.Modifiers = modifierValues;
                         }
 
-                        await locator.First.ClickAsync(options).ConfigureAwait(false);
+                        await locator.ClickAsync(options).ConfigureAwait(false);
                     }
                 }, token).ConfigureAwait(false);
 
-                var locatorSource = $"page.getByRole({QuoteJsString(roleName)}, {{ name: {QuoteJsString(@ref)} }})";
+                var locatorSource = $"page.locator({QuoteJsString($"aria-ref={@ref}")})";
                 var method = doubleClick == true ? "dblclick" : "click";
                 var optionsLiteral = FormatClickOptionsLiteral(buttonName, modifierNames);
                 response.AddCode(optionsLiteral is null

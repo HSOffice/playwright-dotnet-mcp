@@ -7,7 +7,11 @@ namespace ExternalBrowserWinForms;
 
 public partial class MainForm : Form
 {
+    private readonly string _storageRoot;
     private readonly string _logsRoot;
+    private readonly string _screenshotsRoot;
+    private readonly string _downloadsRoot;
+    private readonly string _userDataRoot;
     private readonly string _runLogPath;
     private readonly LoggingManager _loggingManager;
     private readonly BrowserProcessLauncher _processLauncher = new();
@@ -19,8 +23,24 @@ public partial class MainForm : Form
     {
         InitializeComponent();
 
-        _logsRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+        var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        if (string.IsNullOrWhiteSpace(desktop) || !Directory.Exists(desktop))
+        {
+            desktop = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        }
+
+        _storageRoot = Path.Combine(desktop, "ExternalBrowserWinForms");
+        Directory.CreateDirectory(_storageRoot);
+
+        _logsRoot = Path.Combine(_storageRoot, "Logs");
         Directory.CreateDirectory(_logsRoot);
+        _screenshotsRoot = Path.Combine(_storageRoot, "Screenshots");
+        Directory.CreateDirectory(_screenshotsRoot);
+        _downloadsRoot = Path.Combine(_storageRoot, "Downloads");
+        Directory.CreateDirectory(_downloadsRoot);
+        _userDataRoot = Path.Combine(_storageRoot, "UserData");
+        Directory.CreateDirectory(_userDataRoot);
+
         _runLogPath = Path.Combine(_logsRoot, $"run-{DateTime.Now:yyyyMMdd}.log");
         _loggingManager = new LoggingManager(_logsRoot, AppendLog);
         _playwright = new PlaywrightController(_loggingManager, AppendLog);
@@ -46,11 +66,9 @@ public partial class MainForm : Form
         txtExePath.Text = @"D:\\00-培训材料\\MCP\\MyMcpHost\\McpServer\\WinFormsApp\\bin\\Debug\\net8.0-windows\\WinFormsApp.exe";
         numPort.Value = 9222;
         txtStartUrl.Text = "https://example.com";
-        txtUserDataDir.Text = Path.Combine(Path.GetTempPath(), "xBrowserExProfile_" + Guid.NewGuid().ToString("N"));
-        var shotDir = Path.Combine(Path.GetTempPath(), "shots");
-        Directory.CreateDirectory(shotDir);
-        txtScreenshotPath.Text = Path.Combine(shotDir, "page.png");
-        txtDownloadDir.Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        txtUserDataDir.Text = _userDataRoot;
+        txtScreenshotPath.Text = Path.Combine(_screenshotsRoot, "page.png");
+        txtDownloadDir.Text = _downloadsRoot;
     }
 
     private PageItem? SelectedItem => lstPages.SelectedItem as PageItem;
@@ -77,15 +95,10 @@ public partial class MainForm : Form
 
     private async void btnLaunch_Click(object sender, EventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(txtUserDataDir.Text))
-        {
-            txtUserDataDir.Text = Path.Combine(Path.GetTempPath(), "xBrowserExProfile_" + Guid.NewGuid().ToString("N"));
-        }
-
         var started = _processLauncher.Start(
             txtExePath.Text.Trim(),
             (int)numPort.Value,
-            txtUserDataDir.Text.Trim(),
+            EnsureDirectory(txtUserDataDir.Text.Trim(), _userDataRoot),
             txtProxy.Text.Trim(),
             AppendLog);
 
@@ -152,7 +165,7 @@ public partial class MainForm : Form
             };
 
             await _playwright.EnsureContextAsync(config);
-            await _playwright.CreatePageAsync(txtDownloadDir.Text.Trim());
+            await _playwright.CreatePageAsync(EnsureDirectory(txtDownloadDir.Text.Trim(), _downloadsRoot));
             btnGoto.Enabled = true;
         }
         catch (Exception ex)
@@ -174,13 +187,7 @@ public partial class MainForm : Form
         var success = await _playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null);
         if (success && chkAutoScreenshot.Checked)
         {
-            var path = txtScreenshotPath.Text.Trim();
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                path = Path.Combine(Path.GetTempPath(), "shots", "page.png");
-                txtScreenshotPath.Text = path;
-            }
-
+            var path = EnsureScreenshotPath();
             await _playwright.CaptureScreenshotAsync(path);
         }
     }
@@ -190,7 +197,7 @@ public partial class MainForm : Form
         var state = ProtectButtonsDuringRunAll();
         try
         {
-            if (!_processLauncher.Start(txtExePath.Text.Trim(), (int)numPort.Value, txtUserDataDir.Text.Trim(), txtProxy.Text.Trim(), AppendLog))
+            if (!_processLauncher.Start(txtExePath.Text.Trim(), (int)numPort.Value, EnsureDirectory(txtUserDataDir.Text.Trim(), _userDataRoot), txtProxy.Text.Trim(), AppendLog))
             {
                 return;
             }
@@ -206,11 +213,11 @@ public partial class MainForm : Form
                 RecordHar = false
             };
             await _playwright.EnsureContextAsync(config);
-            var page = await _playwright.CreatePageAsync(txtDownloadDir.Text.Trim());
+            var page = await _playwright.CreatePageAsync(EnsureDirectory(txtDownloadDir.Text.Trim(), _downloadsRoot));
             var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
             if (await _playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null) && chkAutoScreenshot.Checked)
             {
-                await _playwright.CaptureScreenshotAsync(txtScreenshotPath.Text.Trim());
+                await _playwright.CaptureScreenshotAsync(EnsureScreenshotPath());
             }
 
             btnNewPage.Enabled = true;
@@ -440,5 +447,39 @@ public partial class MainForm : Form
         await CleanupAsync();
         _processLauncher.Dispose();
         base.OnFormClosed(e);
+    }
+
+    private string EnsureDirectory(string candidate, string fallback)
+    {
+        var target = string.IsNullOrWhiteSpace(candidate) ? fallback : candidate;
+        try
+        {
+            Directory.CreateDirectory(target);
+        }
+        catch
+        {
+            target = fallback;
+            Directory.CreateDirectory(target);
+        }
+
+        return target;
+    }
+
+    private string EnsureScreenshotPath()
+    {
+        var path = txtScreenshotPath.Text.Trim();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            path = Path.Combine(_screenshotsRoot, $"page-{DateTime.Now:yyyyMMdd-HHmmss}.png");
+            txtScreenshotPath.Text = path;
+        }
+
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        return path;
     }
 }

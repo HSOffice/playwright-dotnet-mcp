@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -11,20 +9,13 @@ internal static class Program
     [STAThread]
     static void Main(string[] args)
     {
-        // ƒ¨»œ≤Œ ˝
-        int debugPort = 9222;
+        // ƒ¨œ≤
         string? userDataDir = null;
         string startUrl = "https://example.com";
 
-        // ºÚ“◊≤Œ ˝Ω‚Œˆ£∫--remote-debugging-port=XXXX  --user-data-dir="PATH"  --url="https://..."
         foreach (var arg in args)
         {
-            if (arg.StartsWith("--remote-debugging-port=", StringComparison.OrdinalIgnoreCase))
-            {
-                var s = arg.Split('=', 2)[1].Trim('"');
-                if (int.TryParse(s, out var p)) debugPort = p;
-            }
-            else if (arg.StartsWith("--user-data-dir=", StringComparison.OrdinalIgnoreCase))
+            if (arg.StartsWith("--user-data-dir=", StringComparison.OrdinalIgnoreCase))
             {
                 userDataDir = arg.Split('=', 2)[1].Trim('"');
             }
@@ -42,24 +33,22 @@ internal static class Program
         }
 
         ApplicationConfiguration.Initialize();
-        Application.Run(new BrowserForm(debugPort, userDataDir!, startUrl));
+        Application.Run(new BrowserForm(userDataDir!, startUrl));
     }
 }
 
 public class BrowserForm : Form
 {
-    private readonly int _debugPort;
     private readonly string _userDataDir;
     private readonly string _startUrl;
     private readonly WebView2 _webView;
 
-    public BrowserForm(int debugPort, string userDataDir, string startUrl)
+    public BrowserForm(string userDataDir, string startUrl)
     {
-        _debugPort = debugPort;
         _userDataDir = userDataDir;
         _startUrl = startUrl;
 
-        Text = $"Mini WebView2 Browser - DevTools:{_debugPort}";
+        Text = "Mini WebView2 Browser";
         Width = 1200;
         Height = 800;
 
@@ -77,26 +66,20 @@ public class BrowserForm : Form
     {
         try
         {
-            // πÿº¸£∫∞— --remote-debugging-port ◊¢»ÎµΩ WebView2 µƒ‰Ø¿¿∆˜≤Œ ˝÷–
-            var additionalArgs = new StringBuilder();
-            additionalArgs.Append($"--remote-debugging-port={_debugPort}");
 
-            // ƒ„“≤ø…“‘‘⁄’‚¿Ô◊∑º”∆‰À¸ Chromium ≤Œ ˝£¨¿˝»ÁΩ˚”√∞≤»´≤ﬂ¬‘µ»£®∞¥–Ë£©£∫
-            // additionalArgs.Append(" --disable-web-security");
-
-            var envOptions = new CoreWebView2EnvironmentOptions(additionalArgs.ToString());
+            // “≤◊∑ Chromium √∞»´‘µ»£Ë£©
             var env = await CoreWebView2Environment.CreateAsync(
                 browserExecutableFolder: null,
                 userDataFolder: _userDataDir,
-                options: envOptions);
+                options: null);
 
             await _webView.EnsureCoreWebView2Async(env);
 
-            // µº∫ΩµΩ≥ı ºµÿ÷∑
+            //  º÷∑
             _webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
             _webView.Source = new Uri(_startUrl);
 
-            // ºÚµ• UI£∫∞¥ F5 À¢–¬°¢Ctrl+L ¥Úø™µÿ÷∑ ‰»ÎøÚ
+            //  UI F5 À¢¬°Ctrl+L Úø™µ÷∑
             _webView.KeyDown += (s, ev) =>
             {
                 if (ev.KeyCode == Keys.F5)
@@ -107,7 +90,7 @@ public class BrowserForm : Form
                 if (ev.Control && ev.KeyCode == Keys.L)
                 {
                     var input = Microsoft.VisualBasic.Interaction.InputBox(
-                        " ‰»Î“™Ã¯◊™µƒ URL£∫", "µº∫ΩµΩ", _webView.Source?.ToString() ?? "https://");
+                        "“™◊™ URL", "", _webView.Source?.ToString() ?? "https://");
                     if (!string.IsNullOrWhiteSpace(input))
                     {
                         try { _webView.Source = new Uri(input); } catch { }
@@ -116,13 +99,13 @@ public class BrowserForm : Form
                 }
             };
 
-            // ¥∞ø⁄±ÍÃ‚œ‘ æ“≥√Ê±ÍÃ‚
+            // ⁄± æ“≥
             _webView.CoreWebView2.DocumentTitleChanged += (s, ev) =>
             {
-                Text = $"{_webView.CoreWebView2.DocumentTitle} - DevTools:{_debugPort}";
+                Text = _webView.CoreWebView2.DocumentTitle;
             };
 
-            // øÿ÷∆Ã®œ˚œ¢ºÚµ•¥Ú”°
+            // Ã®œ¢Úµ•¥”°
             _webView.CoreWebView2.WebMessageReceived += (s, ev) =>
             {
                 Console.WriteLine($"[WebMessage] {ev.TryGetWebMessageAsString()}");
@@ -130,7 +113,7 @@ public class BrowserForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"≥ı ºªØ WebView2  ß∞‹£∫\r\n{ex}", "Error",
+            MessageBox.Show(this, $" º WebView2  ß‹£\r\n{ex}", "Error",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }

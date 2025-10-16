@@ -262,7 +262,7 @@ public class TabStateTests
     public async Task WaitForTimeoutAsync_UsesEvaluateWhenNotBlocked()
     {
         var pageMock = new Mock<IPage>();
-        pageMock.Setup(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<PageEvaluateOptions?>()))
+        pageMock.Setup(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>()))
             .ReturnsAsync((object?)null);
 
         var tab = new TabState(pageMock.Object, "tab-1", DateTimeOffset.UtcNow, _ => { });
@@ -271,8 +271,21 @@ public class TabStateTests
 
         pageMock.Verify(p => p.EvaluateAsync<object>(
             "(ms) => new Promise(resolve => setTimeout(resolve, ms))",
-            It.Is<object?>(arg => arg is double value && Math.Abs(value - 250d) < 0.001),
-            It.IsAny<PageEvaluateOptions?>()), Times.Once);
+            It.Is<object?>(arg =>
+            {
+                if (arg == null)
+                {
+                    return false;
+                }
+
+                if (arg.GetType() != typeof(double))
+                {
+                    return false;
+                }
+
+                var value = (double)arg;
+                return Math.Abs(value - 250d) < 0.001;
+            })), Times.Once);
     }
 
     [Fact]
@@ -281,7 +294,7 @@ public class TabStateTests
         var manager = new TabManager();
         var pageMock = new Mock<IPage>();
         pageMock.SetupGet(p => p.Url).Returns("https://example.com/");
-        pageMock.Setup(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<PageEvaluateOptions?>()))
+        pageMock.Setup(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>()))
             .Throws(new InvalidOperationException("Should not evaluate"));
 
         var tab = manager.Register(pageMock.Object);
@@ -296,7 +309,7 @@ public class TabStateTests
         watch.Stop();
 
         Assert.True(watch.Elapsed >= TimeSpan.FromMilliseconds(20));
-        pageMock.Verify(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<PageEvaluateOptions?>()), Times.Never);
+        pageMock.Verify(p => p.EvaluateAsync<object>(It.IsAny<string>(), It.IsAny<object?>()), Times.Never);
 
         tab.Dispose();
     }
@@ -326,7 +339,7 @@ public class TabStateTests
 
     private static Mock<IPage> CreatePageMock(string snapshot, out Dictionary<string, Mock<ILocator>> locatorMap)
     {
-        locatorMap = new Dictionary<string, Mock<ILocator>>(StringComparer.Ordinal)
+        var locatorDictionary = new Dictionary<string, Mock<ILocator>>(StringComparer.Ordinal)
         {
             ["aria-ref=field-1"] = CreateLocatorMock(),
             ["aria-ref=field-2"] = CreateLocatorMock(),
@@ -337,15 +350,16 @@ public class TabStateTests
         pageMock.Setup(p => p.Locator(It.IsAny<string>()))
             .Returns<string>(selector =>
             {
-                if (!locatorMap.TryGetValue(selector, out var locator))
+                if (!locatorDictionary.TryGetValue(selector, out var locator))
                 {
                     locator = CreateLocatorMock();
-                    locatorMap[selector] = locator;
+                    locatorDictionary[selector] = locator;
                 }
 
                 return locator.Object;
             });
 
+        locatorMap = locatorDictionary;
         return pageMock;
     }
 

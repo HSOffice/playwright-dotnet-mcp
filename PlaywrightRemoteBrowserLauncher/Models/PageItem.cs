@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace ExternalBrowserWinForms.Models;
+namespace PlaywrightRemoteBrowserLauncher.Models;
 
 public sealed class PageItem
 {

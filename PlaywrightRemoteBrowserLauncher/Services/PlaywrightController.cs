@@ -1,7 +1,7 @@
-using ExternalBrowserWinForms.Models;
+using PlaywrightRemoteBrowserLauncher.Models;
 using Microsoft.Playwright;
 
-namespace ExternalBrowserWinForms.Services;
+namespace PlaywrightRemoteBrowserLauncher.Services;
 
 public sealed class PlaywrightController : IAsyncDisposable
 {

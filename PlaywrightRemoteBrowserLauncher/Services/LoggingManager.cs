@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ExternalBrowserWinForms.Services;
+namespace PlaywrightRemoteBrowserLauncher.Services;
 
 public sealed class LoggingManager
 {

@@ -93,8 +93,22 @@ public partial class MainForm : Form
     private async void btnLaunch_Click(object sender, EventArgs e)
     {
         Directory.CreateDirectory(_userDataRoot);
+        var commandLine = txtExePath.Text.Trim();
+        var portFromCommandLine = ExtractRemoteDebuggingPort(commandLine);
+        if (portFromCommandLine is int parsedPort)
+        {
+            if (parsedPort < (int)numPort.Minimum || parsedPort > (int)numPort.Maximum)
+            {
+                AppendLog($"⚠️ 命令行中指定的 --remote-debugging-port={parsedPort} 超出可用范围 ({numPort.Minimum}-{numPort.Maximum})，继续使用界面端口 {(int)numPort.Value}。");
+            }
+            else if ((int)numPort.Value != parsedPort)
+            {
+                AppendLog($"检测到命令行端口 {parsedPort}，已同步到界面。");
+                numPort.Value = parsedPort;
+            }
+        }
         var started = _processLauncher.Start(
-            txtExePath.Text.Trim(),
+            commandLine,
             (int)numPort.Value,
             _userDataRoot,
             txtProxy.Text.Trim(),
@@ -105,6 +119,42 @@ public partial class MainForm : Form
             btnWaitDevTools.Enabled = true;
             btnCloseAll.Enabled = true;
         }
+    }
+
+    private static int? ExtractRemoteDebuggingPort(string commandLine)
+    {
+        if (string.IsNullOrWhiteSpace(commandLine))
+        {
+            return null;
+        }
+
+        const string marker = "--remote-debugging-port=";
+        var index = commandLine.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (index < 0)
+        {
+            return null;
+        }
+
+        index += marker.Length;
+        if (index >= commandLine.Length)
+        {
+            return null;
+        }
+
+        var span = commandLine.AsSpan(index);
+        var end = 0;
+        while (end < span.Length && !char.IsWhiteSpace(span[end]))
+        {
+            end++;
+        }
+
+        if (end == 0)
+        {
+            return null;
+        }
+
+        var value = span[..end].Trim('\"', '\'');
+        return int.TryParse(value, out var port) ? port : null;
     }
 
     private async void btnWaitDevTools_Click(object sender, EventArgs e)

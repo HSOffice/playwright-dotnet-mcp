@@ -69,6 +69,8 @@ public sealed class BrowserProcessLauncher : IDisposable
             CreateNoWindow = false
         };
 
+        info.Environment["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"] = $"--remote-debugging-port={port}";
+
         _process = Process.Start(info);
         if (_process is null)
         {

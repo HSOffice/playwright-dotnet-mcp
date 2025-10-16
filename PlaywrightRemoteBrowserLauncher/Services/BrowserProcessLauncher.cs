@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Text;
 
 namespace PlaywrightRemoteBrowserLauncher.Services;
 
@@ -10,25 +12,59 @@ public sealed class BrowserProcessLauncher : IDisposable
 
     public bool Start(string exePath, int port, string userDataDir, string? proxyArguments, Action<string> log)
     {
-        if (!File.Exists(exePath))
+        if (string.IsNullOrWhiteSpace(exePath))
         {
-            log($"未找到可执行文件: {exePath}");
+            log("未指定可执行文件路径。");
+            return false;
+        }
+
+        var (executablePath, extraArguments) = SplitExecutableAndArguments(exePath);
+
+        if (!File.Exists(executablePath))
+        {
+            log($"未找到可执行文件: {executablePath}");
             return false;
         }
 
         Directory.CreateDirectory(userDataDir);
         Stop();
 
-        var args = $"--remote-debugging-port={port} --user-data-dir=\"{userDataDir}\"";
+        var argsBuilder = new StringBuilder();
+        var containsRemotePortArgument = false;
+        if (!string.IsNullOrWhiteSpace(extraArguments))
+        {
+            var normalizedExtra = extraArguments.Trim();
+            containsRemotePortArgument = normalizedExtra.Contains("--remote-debugging-port", StringComparison.OrdinalIgnoreCase);
+
+            if (normalizedExtra.Length > 0)
+            {
+                argsBuilder.Append(normalizedExtra);
+                if (!normalizedExtra.EndsWith(' '))
+                {
+                    argsBuilder.Append(' ');
+                }
+            }
+        }
+
+        if (!containsRemotePortArgument)
+        {
+            argsBuilder.Append($"--remote-debugging-port={port} ");
+        }
+        else if (extraArguments is not null && !extraArguments.Contains($"--remote-debugging-port={port}", StringComparison.OrdinalIgnoreCase))
+        {
+            log($"⚠️ 命令行中已包含 --remote-debugging-port 参数，请确认端口与界面中的 {port} 一致。");
+        }
+
+        argsBuilder.Append($"--user-data-dir=\"{userDataDir}\"");
         if (!string.IsNullOrWhiteSpace(proxyArguments))
         {
-            args += $" --proxy-server=\"{proxyArguments}\"";
+            argsBuilder.Append($" --proxy-server=\"{proxyArguments}\"");
         }
 
         var info = new ProcessStartInfo
         {
-            FileName = exePath,
-            Arguments = args,
+            FileName = executablePath,
+            Arguments = argsBuilder.ToString(),
             UseShellExecute = false,
             CreateNoWindow = false
         };
@@ -40,7 +76,7 @@ public sealed class BrowserProcessLauncher : IDisposable
             return false;
         }
 
-        log($"已启动：{exePath}");
+        log($"已启动：{executablePath}");
         return true;
     }
 
@@ -66,5 +102,46 @@ public sealed class BrowserProcessLauncher : IDisposable
     public void Dispose()
     {
         Stop();
+    }
+
+    private static (string ExecutablePath, string? ExtraArguments) SplitExecutableAndArguments(string commandLine)
+    {
+        var span = commandLine.AsSpan().Trim();
+        if (span.IsEmpty)
+        {
+            return (string.Empty, null);
+        }
+
+        var inQuotes = false;
+        var builder = new StringBuilder();
+        var index = 0;
+
+        while (index < span.Length)
+        {
+            var current = span[index];
+            if (current == '\"')
+            {
+                inQuotes = !inQuotes;
+                index++;
+                continue;
+            }
+
+            if (!inQuotes && char.IsWhiteSpace(current))
+            {
+                break;
+            }
+
+            builder.Append(current);
+            index++;
+        }
+
+        while (index < span.Length && char.IsWhiteSpace(span[index]))
+        {
+            index++;
+        }
+
+        var executable = builder.ToString();
+        var extraArguments = index < span.Length ? span[index..].ToString() : null;
+        return (executable, string.IsNullOrWhiteSpace(extraArguments) ? null : extraArguments);
     }
 }

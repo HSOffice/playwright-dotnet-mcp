@@ -77,7 +77,8 @@ public class TabStateTests
     public void GetConsoleMessages_ReturnsAllMessages()
     {
         var (tab, pageMock, consoleHandler) = CreateTabWithConsoleCapture();
-        var handler = Assert.NotNull(consoleHandler);
+        Assert.NotNull(consoleHandler);
+        var handler = consoleHandler!;
 
         var infoMessage = CreateConsoleMessage("log", "info message");
         var errorMessage = CreateConsoleMessage("error", "error message");
@@ -107,7 +108,8 @@ public class TabStateTests
     public void GetConsoleMessages_ReturnsOnlyErrors()
     {
         var (tab, pageMock, consoleHandler) = CreateTabWithConsoleCapture();
-        var handler = Assert.NotNull(consoleHandler);
+        Assert.NotNull(consoleHandler);
+        var handler = consoleHandler!;
 
         var infoMessage = CreateConsoleMessage("log", "info message");
         var errorMessage = CreateConsoleMessage("error", "error message");
@@ -128,8 +130,10 @@ public class TabStateTests
     public void GetNetworkRequests_ReturnsClones()
     {
         var (tab, pageMock, requestHandler, responseHandler, _, _) = CreateTabWithNetworkCapture();
-        var onRequest = Assert.NotNull(requestHandler);
-        var onResponse = Assert.NotNull(responseHandler);
+        Assert.NotNull(requestHandler);
+        Assert.NotNull(responseHandler);
+        var onRequest = requestHandler!;
+        var onResponse = responseHandler!;
 
         var request = CreateRequestMock("GET", "https://example.com/api", "xhr");
         var response = CreateResponseMock(request, status: 200);
@@ -157,8 +161,10 @@ public class TabStateTests
     public async Task NavigateAsync_ClearsNetworkRequestsBeforeNavigation()
     {
         var (tab, pageMock, requestHandler, responseHandler, _, setUrl) = CreateTabWithNetworkCapture();
-        var onRequest = Assert.NotNull(requestHandler);
-        var onResponse = Assert.NotNull(responseHandler);
+        Assert.NotNull(requestHandler);
+        Assert.NotNull(responseHandler);
+        var onRequest = requestHandler!;
+        var onResponse = responseHandler!;
 
         var initialRequest = CreateRequestMock("POST", "https://example.com/api", "xhr");
         var initialResponse = CreateResponseMock(initialRequest, status: 201);
@@ -271,7 +277,7 @@ public class TabStateTests
 
         pageMock.Verify(p => p.EvaluateAsync<object>(
             "(ms) => new Promise(resolve => setTimeout(resolve, ms))",
-            It.Is<object?>(arg => arg is double value && Math.Abs(value - 250d) < 0.001)), Times.Once);
+            It.Is<object?>(arg => arg != null && arg.GetType() == typeof(double) && Math.Abs((double)arg - 250d) < 0.001)), Times.Once);
     }
 
     [Fact]
@@ -333,8 +339,8 @@ public class TabStateTests
 
         var pageMock = new Mock<IPage>(MockBehavior.Strict);
         pageMock.As<IPageSnapshotForAi>().Setup(p => p._SnapshotForAIAsync()).ReturnsAsync(snapshot);
-        pageMock.Setup(p => p.Locator(It.IsAny<string>()))
-            .Returns<string>(selector =>
+        pageMock.Setup(p => p.Locator(It.IsAny<string>(), It.IsAny<PageLocatorOptions?>()))
+            .Returns<string, PageLocatorOptions?>((selector, _) =>
             {
                 if (!locatorDictionary.TryGetValue(selector, out var locator))
                 {

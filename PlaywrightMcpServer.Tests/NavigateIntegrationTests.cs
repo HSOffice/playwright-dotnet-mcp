@@ -37,8 +37,8 @@ public class NavigateIntegrationTests
         pageMock.Setup(p => p.TitleAsync()).ReturnsAsync("Download ready");
 
         downloadMock.SetupGet(d => d.SuggestedFilename).Returns("report.pdf");
-        downloadMock.Setup(d => d.SaveAsAsync(It.IsAny<string>(), It.IsAny<DownloadSaveAsOptions?>()))
-            .Returns<string, DownloadSaveAsOptions?>((_, _) =>
+        downloadMock.Setup(d => d.SaveAsAsync(It.IsAny<string>()))
+            .Returns<string>(_ =>
             {
                 saveCompletion.TrySetResult(true);
                 return Task.CompletedTask;

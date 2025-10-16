@@ -9,7 +9,7 @@ internal static class Program
     [STAThread]
     static void Main(string[] args)
     {
-        // Ĭϲ
+        // Defaults
         string? userDataDir = null;
         string startUrl = "https://example.com";
 
@@ -67,7 +67,7 @@ public class BrowserForm : Form
         try
         {
 
-            // Ҳ׷ Chromium ðȫԵȣ裩
+            // Create the WebView2 environment
             var env = await CoreWebView2Environment.CreateAsync(
                 browserExecutableFolder: null,
                 userDataFolder: _userDataDir,
@@ -75,11 +75,11 @@ public class BrowserForm : Form
 
             await _webView.EnsureCoreWebView2Async(env);
 
-            // ʼַ
+            // Initialize the starting URL
             _webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
             _webView.Source = new Uri(_startUrl);
 
-            //  UI F5 ˢ¡Ctrl+L 򿪵ַ
+            // Handle UI shortcuts: F5 to refresh, Ctrl+L to open the address bar
             _webView.KeyDown += (s, ev) =>
             {
                 if (ev.KeyCode == Keys.F5)
@@ -90,7 +90,7 @@ public class BrowserForm : Form
                 if (ev.Control && ev.KeyCode == Keys.L)
                 {
                     var input = Microsoft.VisualBasic.Interaction.InputBox(
-                        "Ҫת URL", "", _webView.Source?.ToString() ?? "https://");
+                        "Enter the URL", "", _webView.Source?.ToString() ?? "https://");
                     if (!string.IsNullOrWhiteSpace(input))
                     {
                         try { _webView.Source = new Uri(input); } catch { }
@@ -99,13 +99,13 @@ public class BrowserForm : Form
                 }
             };
 
-            // ڱʾҳ
+            // Update window title with the page title
             _webView.CoreWebView2.DocumentTitleChanged += (s, ev) =>
             {
                 Text = _webView.CoreWebView2.DocumentTitle;
             };
 
-            // ̨Ϣ򵥴ӡ
+            // Log web messages to the console
             _webView.CoreWebView2.WebMessageReceived += (s, ev) =>
             {
                 Console.WriteLine($"[WebMessage] {ev.TryGetWebMessageAsString()}");
@@ -113,7 +113,7 @@ public class BrowserForm : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"ʼ WebView2 ʧܣ\r\n{ex}", "Error",
+            MessageBox.Show(this, $"Failed to initialize WebView2\r\n{ex}", "Error",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }

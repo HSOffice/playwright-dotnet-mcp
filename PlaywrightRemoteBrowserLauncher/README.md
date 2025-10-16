@@ -53,7 +53,7 @@ WinForms 主窗体，负责：
 
 ## 运行流程概览
 
-1. 在 UI 中指定浏览器可执行文件路径（默认指向仓库中的示例 **WebView2BrowserHost** 项目编译产物）。
+1. 在 UI 中指定浏览器可执行文件路径（默认指向仓库中的示例 **WebView2BrowserHost** 项目编译产物，支持直接粘贴包含引号与额外参数的命令行，例如 `"C:\\path\\to\\WebView2BrowserHost.exe" --some-switch`）。
 2. 点击“启动”后，`BrowserProcessLauncher` 会以指定调试端口、用户数据目录启动浏览器。
 3. 通过“等待 DevTools”按钮，`DevToolsEndpointWatcher` 会轮询直到远程调试端点准备就绪。
 4. “连接 Playwright”调用 `PlaywrightController.ConnectAsync` 连接到 DevTools WebSocket。

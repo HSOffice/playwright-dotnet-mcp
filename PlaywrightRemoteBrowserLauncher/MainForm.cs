@@ -63,7 +63,7 @@ public partial class MainForm : Form
             }
         });
 
-        txtExePath.Text = @"D:\\00-培训材料\\MCP\\MyMcpHost\\McpServer\\WinFormsApp\\bin\\Debug\\net8.0-windows\\WinFormsApp.exe";
+        txtExePath.Text = @"..\..\..\..\WinFormsApp\bin\Debug\net8.0-windows\WinFormsApp.exe";
         numPort.Value = 9222;
         txtStartUrl.Text = "https://example.com";
     }

@@ -153,7 +153,8 @@ public partial class MainForm : Form
             return null;
         }
 
-        var value = span[..end].Trim('\"', '\'');
+        var valueSpan = span[..end].Trim();
+        var value = valueSpan.ToString().Trim('\"', '\'');
         return int.TryParse(value, out var port) ? port : null;
     }
 

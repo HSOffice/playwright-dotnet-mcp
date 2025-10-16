@@ -37,25 +37,12 @@ partial class MainForm
     private System.Windows.Forms.TextBox txtProxy;
     private System.Windows.Forms.CheckBox chkIgnoreTls;
 
-    private System.Windows.Forms.GroupBox grpScripts;
-    private System.Windows.Forms.CheckBox chkInitScript;
-    private System.Windows.Forms.TextBox txtInitScript;
-    private System.Windows.Forms.CheckBox chkPostNavScript;
-    private System.Windows.Forms.TextBox txtPostNavScript;
-
     private System.Windows.Forms.GroupBox grpAdvanced;
     private System.Windows.Forms.CheckBox chkExposeDotnet;
     private System.Windows.Forms.TextBox txtExposeName;
     private System.Windows.Forms.Label lblRetry;
     private System.Windows.Forms.NumericUpDown numRetryCount;
     private System.Windows.Forms.NumericUpDown numRetryDelayMs;
-
-    private System.Windows.Forms.GroupBox grpUtilities;
-    private System.Windows.Forms.Button btnExportJsonList;
-    private System.Windows.Forms.Button btnExportJsonProtocol;
-    private System.Windows.Forms.Button btnRefreshPages;
-    private System.Windows.Forms.TextBox txtNewTabUrl;
-    private System.Windows.Forms.Button btnOpenNewTab;
 
     private System.Windows.Forms.GroupBox grpPagesLog;
     private System.Windows.Forms.Label lblPages;
@@ -72,70 +59,69 @@ partial class MainForm
 
     private void InitializeComponent()
     {
-        components = new System.ComponentModel.Container();
-        grpConnection = new System.Windows.Forms.GroupBox();
-        grpWorkflow = new System.Windows.Forms.GroupBox();
-        grpAutomation = new System.Windows.Forms.GroupBox();
-        grpNetwork = new System.Windows.Forms.GroupBox();
-        grpScripts = new System.Windows.Forms.GroupBox();
-        grpAdvanced = new System.Windows.Forms.GroupBox();
-        grpUtilities = new System.Windows.Forms.GroupBox();
-        grpPagesLog = new System.Windows.Forms.GroupBox();
-        txtExePath = new System.Windows.Forms.TextBox();
-        btnBrowseExe = new System.Windows.Forms.Button();
-        numPort = new System.Windows.Forms.NumericUpDown();
-        txtStartUrl = new System.Windows.Forms.TextBox();
-        lblExe = new System.Windows.Forms.Label();
-        lblPort = new System.Windows.Forms.Label();
-        lblUrl = new System.Windows.Forms.Label();
-        btnLaunch = new System.Windows.Forms.Button();
-        btnWaitDevTools = new System.Windows.Forms.Button();
-        btnConnect = new System.Windows.Forms.Button();
-        btnNewPage = new System.Windows.Forms.Button();
-        btnGoto = new System.Windows.Forms.Button();
-        btnCloseAll = new System.Windows.Forms.Button();
-        btnRunAll = new System.Windows.Forms.Button();
-        btnResetRunAll = new System.Windows.Forms.Button();
-        chkAutoScreenshot = new System.Windows.Forms.CheckBox();
-        btnStartLogging = new System.Windows.Forms.Button();
-        btnStopLogging = new System.Windows.Forms.Button();
-        btnSaveSnapshot = new System.Windows.Forms.Button();
-        lblProxy = new System.Windows.Forms.Label();
-        txtProxy = new System.Windows.Forms.TextBox();
-        chkIgnoreTls = new System.Windows.Forms.CheckBox();
-        chkInitScript = new System.Windows.Forms.CheckBox();
-        txtInitScript = new System.Windows.Forms.TextBox();
-        chkPostNavScript = new System.Windows.Forms.CheckBox();
-        txtPostNavScript = new System.Windows.Forms.TextBox();
-        chkExposeDotnet = new System.Windows.Forms.CheckBox();
-        txtExposeName = new System.Windows.Forms.TextBox();
-        lblRetry = new System.Windows.Forms.Label();
-        numRetryCount = new System.Windows.Forms.NumericUpDown();
-        numRetryDelayMs = new System.Windows.Forms.NumericUpDown();
-        btnExportJsonList = new System.Windows.Forms.Button();
-        btnExportJsonProtocol = new System.Windows.Forms.Button();
-        btnRefreshPages = new System.Windows.Forms.Button();
-        txtNewTabUrl = new System.Windows.Forms.TextBox();
-        btnOpenNewTab = new System.Windows.Forms.Button();
-        lblPages = new System.Windows.Forms.Label();
-        lstPages = new System.Windows.Forms.ListBox();
-        lblLog = new System.Windows.Forms.Label();
-        txtLog = new System.Windows.Forms.TextBox();
-        ((System.ComponentModel.ISupportInitialize)numPort).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)numRetryCount).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)numRetryDelayMs).BeginInit();
-        SuspendLayout();
+        grpConnection = new GroupBox();
+        lblExe = new Label();
+        txtExePath = new TextBox();
+        btnBrowseExe = new Button();
+        lblPort = new Label();
+        numPort = new NumericUpDown();
+        lblUrl = new Label();
+        txtStartUrl = new TextBox();
+        grpWorkflow = new GroupBox();
+        btnLaunch = new Button();
+        btnWaitDevTools = new Button();
+        btnConnect = new Button();
+        btnNewPage = new Button();
+        btnGoto = new Button();
+        btnCloseAll = new Button();
+        grpAutomation = new GroupBox();
+        btnRunAll = new Button();
+        btnResetRunAll = new Button();
+        chkAutoScreenshot = new CheckBox();
+        btnStartLogging = new Button();
+        btnStopLogging = new Button();
+        btnSaveSnapshot = new Button();
+        grpNetwork = new GroupBox();
+        lblProxy = new Label();
+        txtProxy = new TextBox();
+        chkIgnoreTls = new CheckBox();
+        grpAdvanced = new GroupBox();
+        chkExposeDotnet = new CheckBox();
+        txtExposeName = new TextBox();
+        lblRetry = new Label();
+        numRetryCount = new NumericUpDown();
+        numRetryDelayMs = new NumericUpDown();
+        grpPagesLog = new GroupBox();
+        txtLog = new TextBox();
+        lblLog = new Label();
+        lstPages = new ListBox();
+        lblPages = new Label();
+        txtPostNavScript = new TextBox();
+        chkPostNavScript = new CheckBox();
+        txtInitScript = new TextBox();
+        chkInitScript = new CheckBox();
+        grpScripts = new GroupBox();
+        btnOpenNewTab = new Button();
+        txtNewTabUrl = new TextBox();
+        btnRefreshPages = new Button();
+        btnExportJsonProtocol = new Button();
+        btnExportJsonList = new Button();
+        grpUtilities = new GroupBox();
         grpConnection.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)numPort).BeginInit();
         grpWorkflow.SuspendLayout();
         grpAutomation.SuspendLayout();
         grpNetwork.SuspendLayout();
-        grpScripts.SuspendLayout();
         grpAdvanced.SuspendLayout();
-        grpUtilities.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)numRetryCount).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)numRetryDelayMs).BeginInit();
         grpPagesLog.SuspendLayout();
-
+        grpScripts.SuspendLayout();
+        grpUtilities.SuspendLayout();
+        SuspendLayout();
+        // 
         // grpConnection
-        grpConnection.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+        // 
         grpConnection.Controls.Add(lblExe);
         grpConnection.Controls.Add(txtExePath);
         grpConnection.Controls.Add(btnBrowseExe);
@@ -143,465 +129,554 @@ partial class MainForm
         grpConnection.Controls.Add(numPort);
         grpConnection.Controls.Add(lblUrl);
         grpConnection.Controls.Add(txtStartUrl);
-        grpConnection.Location = new System.Drawing.Point(10, 10);
+        grpConnection.Location = new Point(13, 13);
+        grpConnection.Margin = new Padding(4);
         grpConnection.Name = "grpConnection";
-        grpConnection.Size = new System.Drawing.Size(880, 110);
+        grpConnection.Padding = new Padding(4);
+        grpConnection.Size = new Size(674, 112);
         grpConnection.TabIndex = 0;
         grpConnection.TabStop = false;
         grpConnection.Text = "浏览器连接";
-
+        // 
         // lblExe
+        // 
         lblExe.AutoSize = true;
-        lblExe.Location = new System.Drawing.Point(15, 30);
+        lblExe.Location = new Point(19, 33);
+        lblExe.Margin = new Padding(4, 0, 4, 0);
         lblExe.Name = "lblExe";
-        lblExe.Size = new System.Drawing.Size(80, 15);
+        lblExe.Size = new Size(99, 20);
         lblExe.TabIndex = 0;
         lblExe.Text = "可执行文件：";
-
+        // 
         // txtExePath
-        txtExePath.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        txtExePath.Location = new System.Drawing.Point(101, 26);
+        // 
+        txtExePath.Location = new Point(130, 28);
+        txtExePath.Margin = new Padding(4);
         txtExePath.Name = "txtExePath";
-        txtExePath.Size = new System.Drawing.Size(679, 23);
+        txtExePath.Size = new Size(327, 27);
         txtExePath.TabIndex = 1;
-
+        // 
         // btnBrowseExe
-        btnBrowseExe.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-        btnBrowseExe.Location = new System.Drawing.Point(790, 25);
+        // 
+        btnBrowseExe.Location = new Point(465, 27);
+        btnBrowseExe.Margin = new Padding(4);
         btnBrowseExe.Name = "btnBrowseExe";
-        btnBrowseExe.Size = new System.Drawing.Size(75, 25);
+        btnBrowseExe.Size = new Size(65, 33);
         btnBrowseExe.TabIndex = 2;
         btnBrowseExe.Text = "浏览…";
         btnBrowseExe.UseVisualStyleBackColor = true;
         btnBrowseExe.Click += btnBrowseExe_Click;
-
+        // 
         // lblPort
+        // 
         lblPort.AutoSize = true;
-        lblPort.Location = new System.Drawing.Point(15, 65);
+        lblPort.Location = new Point(538, 33);
+        lblPort.Margin = new Padding(4, 0, 4, 0);
         lblPort.Name = "lblPort";
-        lblPort.Size = new System.Drawing.Size(68, 15);
+        lblPort.Size = new Size(54, 20);
         lblPort.TabIndex = 3;
-        lblPort.Text = "调试端口：";
-
+        lblPort.Text = "端口：";
+        // 
         // numPort
-        numPort.Location = new System.Drawing.Point(101, 63);
+        // 
+        numPort.Location = new Point(600, 31);
+        numPort.Margin = new Padding(4);
         numPort.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
         numPort.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
         numPort.Name = "numPort";
-        numPort.Size = new System.Drawing.Size(120, 23);
+        numPort.Size = new Size(62, 27);
         numPort.TabIndex = 4;
         numPort.Value = new decimal(new int[] { 9222, 0, 0, 0 });
-
+        // 
         // lblUrl
+        // 
         lblUrl.AutoSize = true;
-        lblUrl.Location = new System.Drawing.Point(250, 65);
+        lblUrl.Location = new Point(16, 69);
+        lblUrl.Margin = new Padding(4, 0, 4, 0);
         lblUrl.Name = "lblUrl";
-        lblUrl.Size = new System.Drawing.Size(64, 15);
+        lblUrl.Size = new Size(87, 20);
         lblUrl.TabIndex = 5;
         lblUrl.Text = "起始 URL：";
-
+        // 
         // txtStartUrl
-        txtStartUrl.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        txtStartUrl.Location = new System.Drawing.Point(320, 63);
+        // 
+        txtStartUrl.Location = new Point(130, 66);
+        txtStartUrl.Margin = new Padding(4);
         txtStartUrl.Name = "txtStartUrl";
-        txtStartUrl.Size = new System.Drawing.Size(545, 23);
+        txtStartUrl.Size = new Size(532, 27);
         txtStartUrl.TabIndex = 6;
-
+        // 
         // grpWorkflow
-        grpWorkflow.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+        // 
         grpWorkflow.Controls.Add(btnLaunch);
         grpWorkflow.Controls.Add(btnWaitDevTools);
         grpWorkflow.Controls.Add(btnConnect);
         grpWorkflow.Controls.Add(btnNewPage);
         grpWorkflow.Controls.Add(btnGoto);
         grpWorkflow.Controls.Add(btnCloseAll);
-        grpWorkflow.Location = new System.Drawing.Point(10, 130);
+        grpWorkflow.Location = new Point(13, 134);
+        grpWorkflow.Margin = new Padding(4);
         grpWorkflow.Name = "grpWorkflow";
-        grpWorkflow.Size = new System.Drawing.Size(880, 70);
+        grpWorkflow.Padding = new Padding(4);
+        grpWorkflow.Size = new Size(674, 78);
         grpWorkflow.TabIndex = 1;
         grpWorkflow.TabStop = false;
         grpWorkflow.Text = "分步操作";
-
+        // 
         // btnLaunch
-        btnLaunch.Location = new System.Drawing.Point(15, 25);
+        // 
+        btnLaunch.Location = new Point(14, 24);
+        btnLaunch.Margin = new Padding(4);
         btnLaunch.Name = "btnLaunch";
-        btnLaunch.Size = new System.Drawing.Size(120, 30);
+        btnLaunch.Size = new Size(95, 40);
         btnLaunch.TabIndex = 0;
-        btnLaunch.Text = "1) 启动进程";
+        btnLaunch.Text = "1-启动进程";
         btnLaunch.UseVisualStyleBackColor = true;
         btnLaunch.Click += btnLaunch_Click;
-
+        // 
         // btnWaitDevTools
+        // 
         btnWaitDevTools.Enabled = false;
-        btnWaitDevTools.Location = new System.Drawing.Point(145, 25);
+        btnWaitDevTools.Location = new Point(116, 24);
+        btnWaitDevTools.Margin = new Padding(4);
         btnWaitDevTools.Name = "btnWaitDevTools";
-        btnWaitDevTools.Size = new System.Drawing.Size(140, 30);
+        btnWaitDevTools.Size = new Size(100, 40);
         btnWaitDevTools.TabIndex = 1;
-        btnWaitDevTools.Text = "2) 等待 DevTools";
+        btnWaitDevTools.Text = "2-DevTools";
         btnWaitDevTools.UseVisualStyleBackColor = true;
         btnWaitDevTools.Click += btnWaitDevTools_Click;
-
+        // 
         // btnConnect
+        // 
         btnConnect.Enabled = false;
-        btnConnect.Location = new System.Drawing.Point(295, 25);
+        btnConnect.Location = new Point(223, 24);
+        btnConnect.Margin = new Padding(4);
         btnConnect.Name = "btnConnect";
-        btnConnect.Size = new System.Drawing.Size(150, 30);
+        btnConnect.Size = new Size(110, 40);
         btnConnect.TabIndex = 2;
-        btnConnect.Text = "3) 连接 Playwright";
+        btnConnect.Text = "3-Playwright";
         btnConnect.UseVisualStyleBackColor = true;
         btnConnect.Click += btnConnect_Click;
-
+        // 
         // btnNewPage
+        // 
         btnNewPage.Enabled = false;
-        btnNewPage.Location = new System.Drawing.Point(455, 25);
+        btnNewPage.Location = new Point(340, 24);
+        btnNewPage.Margin = new Padding(4);
         btnNewPage.Name = "btnNewPage";
-        btnNewPage.Size = new System.Drawing.Size(130, 30);
+        btnNewPage.Size = new Size(105, 40);
         btnNewPage.TabIndex = 3;
-        btnNewPage.Text = "4) 新建 Page";
+        btnNewPage.Text = "4-新建 Page";
         btnNewPage.UseVisualStyleBackColor = true;
         btnNewPage.Click += btnNewPage_Click;
-
+        // 
         // btnGoto
+        // 
         btnGoto.Enabled = false;
-        btnGoto.Location = new System.Drawing.Point(595, 25);
+        btnGoto.Location = new Point(452, 24);
+        btnGoto.Margin = new Padding(4);
         btnGoto.Name = "btnGoto";
-        btnGoto.Size = new System.Drawing.Size(120, 30);
+        btnGoto.Size = new Size(100, 40);
         btnGoto.TabIndex = 4;
-        btnGoto.Text = "5) 访问 URL";
+        btnGoto.Text = "5-访问 URL";
         btnGoto.UseVisualStyleBackColor = true;
         btnGoto.Click += btnGoto_Click;
-
+        // 
         // btnCloseAll
-        btnCloseAll.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+        // 
         btnCloseAll.Enabled = false;
-        btnCloseAll.Location = new System.Drawing.Point(730, 25);
+        btnCloseAll.Location = new Point(559, 24);
+        btnCloseAll.Margin = new Padding(4);
         btnCloseAll.Name = "btnCloseAll";
-        btnCloseAll.Size = new System.Drawing.Size(130, 30);
+        btnCloseAll.Size = new Size(100, 40);
         btnCloseAll.TabIndex = 5;
         btnCloseAll.Text = "清理 / 退出";
         btnCloseAll.UseVisualStyleBackColor = true;
         btnCloseAll.Click += btnCloseAll_Click;
-
+        // 
         // grpAutomation
-        grpAutomation.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+        // 
         grpAutomation.Controls.Add(btnRunAll);
         grpAutomation.Controls.Add(btnResetRunAll);
         grpAutomation.Controls.Add(chkAutoScreenshot);
         grpAutomation.Controls.Add(btnStartLogging);
         grpAutomation.Controls.Add(btnStopLogging);
         grpAutomation.Controls.Add(btnSaveSnapshot);
-        grpAutomation.Location = new System.Drawing.Point(10, 210);
+        grpAutomation.Location = new Point(13, 220);
+        grpAutomation.Margin = new Padding(4);
         grpAutomation.Name = "grpAutomation";
-        grpAutomation.Size = new System.Drawing.Size(880, 95);
+        grpAutomation.Padding = new Padding(4);
+        grpAutomation.Size = new Size(674, 78);
         grpAutomation.TabIndex = 2;
         grpAutomation.TabStop = false;
         grpAutomation.Text = "自动化与日志";
-
+        // 
         // btnRunAll
-        btnRunAll.Location = new System.Drawing.Point(15, 25);
+        // 
+        btnRunAll.Location = new Point(16, 28);
+        btnRunAll.Margin = new Padding(4);
         btnRunAll.Name = "btnRunAll";
-        btnRunAll.Size = new System.Drawing.Size(120, 30);
+        btnRunAll.Size = new Size(90, 40);
         btnRunAll.TabIndex = 0;
         btnRunAll.Text = "一键运行";
         btnRunAll.UseVisualStyleBackColor = true;
         btnRunAll.Click += btnRunAll_Click;
-
+        // 
         // btnResetRunAll
-        btnResetRunAll.Location = new System.Drawing.Point(145, 25);
+        // 
+        btnResetRunAll.Location = new Point(114, 28);
+        btnResetRunAll.Margin = new Padding(4);
         btnResetRunAll.Name = "btnResetRunAll";
-        btnResetRunAll.Size = new System.Drawing.Size(140, 30);
+        btnResetRunAll.Size = new Size(90, 40);
         btnResetRunAll.TabIndex = 1;
-        btnResetRunAll.Text = "重置并全跑";
+        btnResetRunAll.Text = "重置全跑";
         btnResetRunAll.UseVisualStyleBackColor = true;
         btnResetRunAll.Click += btnResetRunAll_Click;
-
+        // 
         // chkAutoScreenshot
+        // 
         chkAutoScreenshot.AutoSize = true;
         chkAutoScreenshot.Checked = true;
-        chkAutoScreenshot.CheckState = System.Windows.Forms.CheckState.Checked;
-        chkAutoScreenshot.Location = new System.Drawing.Point(300, 30);
+        chkAutoScreenshot.CheckState = CheckState.Checked;
+        chkAutoScreenshot.Location = new Point(523, 37);
+        chkAutoScreenshot.Margin = new Padding(4);
         chkAutoScreenshot.Name = "chkAutoScreenshot";
-        chkAutoScreenshot.Size = new System.Drawing.Size(219, 19);
+        chkAutoScreenshot.Size = new Size(136, 24);
         chkAutoScreenshot.TabIndex = 2;
-        chkAutoScreenshot.Text = "导航后自动截图（保存至默认目录）";
+        chkAutoScreenshot.Text = "导航后自动截图";
         chkAutoScreenshot.UseVisualStyleBackColor = true;
-
+        // 
         // btnStartLogging
-        btnStartLogging.Location = new System.Drawing.Point(15, 60);
+        // 
+        btnStartLogging.Location = new Point(212, 28);
+        btnStartLogging.Margin = new Padding(4);
         btnStartLogging.Name = "btnStartLogging";
-        btnStartLogging.Size = new System.Drawing.Size(120, 27);
+        btnStartLogging.Size = new Size(90, 40);
         btnStartLogging.TabIndex = 3;
         btnStartLogging.Text = "开始日志";
         btnStartLogging.UseVisualStyleBackColor = true;
         btnStartLogging.Click += btnStartLogging_Click;
-
+        // 
         // btnStopLogging
+        // 
         btnStopLogging.Enabled = false;
-        btnStopLogging.Location = new System.Drawing.Point(145, 60);
+        btnStopLogging.Location = new Point(310, 28);
+        btnStopLogging.Margin = new Padding(4);
         btnStopLogging.Name = "btnStopLogging";
-        btnStopLogging.Size = new System.Drawing.Size(120, 27);
+        btnStopLogging.Size = new Size(90, 40);
         btnStopLogging.TabIndex = 4;
         btnStopLogging.Text = "停止日志";
         btnStopLogging.UseVisualStyleBackColor = true;
         btnStopLogging.Click += btnStopLogging_Click;
-
+        // 
         // btnSaveSnapshot
-        btnSaveSnapshot.Location = new System.Drawing.Point(275, 60);
+        // 
+        btnSaveSnapshot.Location = new Point(408, 28);
+        btnSaveSnapshot.Margin = new Padding(4);
         btnSaveSnapshot.Name = "btnSaveSnapshot";
-        btnSaveSnapshot.Size = new System.Drawing.Size(180, 27);
+        btnSaveSnapshot.Size = new Size(90, 40);
         btnSaveSnapshot.TabIndex = 5;
-        btnSaveSnapshot.Text = "保存快照 (HTML+PNG+JSON)";
+        btnSaveSnapshot.Text = "保存快照";
         btnSaveSnapshot.UseVisualStyleBackColor = true;
         btnSaveSnapshot.Click += btnSaveSnapshot_Click;
-
+        // 
         // grpNetwork
-        grpNetwork.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left;
+        // 
         grpNetwork.Controls.Add(lblProxy);
         grpNetwork.Controls.Add(txtProxy);
         grpNetwork.Controls.Add(chkIgnoreTls);
-        grpNetwork.Location = new System.Drawing.Point(10, 315);
+        grpNetwork.Location = new Point(13, 306);
+        grpNetwork.Margin = new Padding(4);
         grpNetwork.Name = "grpNetwork";
-        grpNetwork.Size = new System.Drawing.Size(430, 100);
+        grpNetwork.Padding = new Padding(4);
+        grpNetwork.Size = new Size(353, 100);
         grpNetwork.TabIndex = 3;
         grpNetwork.TabStop = false;
         grpNetwork.Text = "网络设置";
-
+        // 
         // lblProxy
+        // 
         lblProxy.AutoSize = true;
-        lblProxy.Location = new System.Drawing.Point(15, 30);
+        lblProxy.Location = new Point(19, 40);
+        lblProxy.Margin = new Padding(4, 0, 4, 0);
         lblProxy.Name = "lblProxy";
-        lblProxy.Size = new System.Drawing.Size(121, 15);
+        lblProxy.Size = new Size(173, 20);
         lblProxy.TabIndex = 0;
         lblProxy.Text = "代理 (--proxy-server)：";
-
+        // 
         // txtProxy
-        txtProxy.Location = new System.Drawing.Point(142, 26);
+        // 
+        txtProxy.Location = new Point(200, 35);
+        txtProxy.Margin = new Padding(4);
         txtProxy.Name = "txtProxy";
-        txtProxy.Size = new System.Drawing.Size(270, 23);
+        txtProxy.Size = new Size(104, 27);
         txtProxy.TabIndex = 1;
-
+        // 
         // chkIgnoreTls
+        // 
         chkIgnoreTls.AutoSize = true;
-        chkIgnoreTls.Location = new System.Drawing.Point(18, 65);
+        chkIgnoreTls.Location = new Point(19, 70);
+        chkIgnoreTls.Margin = new Padding(4);
         chkIgnoreTls.Name = "chkIgnoreTls";
-        chkIgnoreTls.Size = new System.Drawing.Size(217, 19);
+        chkIgnoreTls.Size = new Size(308, 24);
         chkIgnoreTls.TabIndex = 2;
         chkIgnoreTls.Text = "忽略 TLS 证书错误 (IgnoreHTTPSErrors)";
         chkIgnoreTls.UseVisualStyleBackColor = true;
-
-        // grpScripts
-        grpScripts.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        grpScripts.Controls.Add(chkInitScript);
-        grpScripts.Controls.Add(txtInitScript);
-        grpScripts.Controls.Add(chkPostNavScript);
-        grpScripts.Controls.Add(txtPostNavScript);
-        grpScripts.Location = new System.Drawing.Point(460, 315);
-        grpScripts.Name = "grpScripts";
-        grpScripts.Size = new System.Drawing.Size(430, 150);
-        grpScripts.TabIndex = 4;
-        grpScripts.TabStop = false;
-        grpScripts.Text = "脚本注入";
-
-        // chkInitScript
-        chkInitScript.AutoSize = true;
-        chkInitScript.Location = new System.Drawing.Point(18, 30);
-        chkInitScript.Name = "chkInitScript";
-        chkInitScript.Size = new System.Drawing.Size(202, 19);
-        chkInitScript.TabIndex = 0;
-        chkInitScript.Text = "AddInitScript（所有页面自动注入）";
-        chkInitScript.UseVisualStyleBackColor = true;
-
-        // txtInitScript
-        txtInitScript.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        txtInitScript.Location = new System.Drawing.Point(18, 55);
-        txtInitScript.Name = "txtInitScript";
-        txtInitScript.Size = new System.Drawing.Size(394, 23);
-        txtInitScript.TabIndex = 1;
-
-        // chkPostNavScript
-        chkPostNavScript.AutoSize = true;
-        chkPostNavScript.Location = new System.Drawing.Point(18, 90);
-        chkPostNavScript.Name = "chkPostNavScript";
-        chkPostNavScript.Size = new System.Drawing.Size(138, 19);
-        chkPostNavScript.TabIndex = 2;
-        chkPostNavScript.Text = "导航后执行 Evaluate";
-        chkPostNavScript.UseVisualStyleBackColor = true;
-
-        // txtPostNavScript
-        txtPostNavScript.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        txtPostNavScript.Location = new System.Drawing.Point(18, 115);
-        txtPostNavScript.Name = "txtPostNavScript";
-        txtPostNavScript.Size = new System.Drawing.Size(394, 23);
-        txtPostNavScript.TabIndex = 3;
-
+        // 
         // grpAdvanced
-        grpAdvanced.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left;
+        // 
         grpAdvanced.Controls.Add(chkExposeDotnet);
         grpAdvanced.Controls.Add(txtExposeName);
         grpAdvanced.Controls.Add(lblRetry);
         grpAdvanced.Controls.Add(numRetryCount);
         grpAdvanced.Controls.Add(numRetryDelayMs);
-        grpAdvanced.Location = new System.Drawing.Point(10, 425);
+        grpAdvanced.Location = new Point(374, 488);
+        grpAdvanced.Margin = new Padding(4);
         grpAdvanced.Name = "grpAdvanced";
-        grpAdvanced.Size = new System.Drawing.Size(430, 120);
+        grpAdvanced.Padding = new Padding(4);
+        grpAdvanced.Size = new Size(313, 103);
         grpAdvanced.TabIndex = 5;
         grpAdvanced.TabStop = false;
         grpAdvanced.Text = "高级选项";
-
+        // 
         // chkExposeDotnet
+        // 
         chkExposeDotnet.AutoSize = true;
-        chkExposeDotnet.Location = new System.Drawing.Point(18, 30);
+        chkExposeDotnet.Location = new Point(22, 28);
+        chkExposeDotnet.Margin = new Padding(4);
         chkExposeDotnet.Name = "chkExposeDotnet";
-        chkExposeDotnet.Size = new System.Drawing.Size(220, 19);
+        chkExposeDotnet.Size = new Size(177, 24);
         chkExposeDotnet.TabIndex = 0;
-        chkExposeDotnet.Text = "暴露 .NET 方法到页面 (ExposeFunction)";
+        chkExposeDotnet.Text = "暴露 .NET 方法到页面";
         chkExposeDotnet.UseVisualStyleBackColor = true;
-
+        // 
         // txtExposeName
-        txtExposeName.Location = new System.Drawing.Point(244, 28);
+        // 
+        txtExposeName.Location = new Point(207, 25);
+        txtExposeName.Margin = new Padding(4);
         txtExposeName.Name = "txtExposeName";
-        txtExposeName.Size = new System.Drawing.Size(170, 23);
+        txtExposeName.Size = new Size(91, 27);
         txtExposeName.TabIndex = 1;
         txtExposeName.Text = "dotnetPing";
-
+        // 
         // lblRetry
+        // 
         lblRetry.AutoSize = true;
-        lblRetry.Location = new System.Drawing.Point(18, 75);
+        lblRetry.Location = new Point(21, 63);
+        lblRetry.Margin = new Padding(4, 0, 4, 0);
         lblRetry.Name = "lblRetry";
-        lblRetry.Size = new System.Drawing.Size(95, 15);
+        lblRetry.Size = new Size(115, 20);
         lblRetry.TabIndex = 2;
-        lblRetry.Text = "重试 (次 / 毫秒)：";
-
+        lblRetry.Text = "重试(次/毫秒)：";
+        // 
         // numRetryCount
-        numRetryCount.Location = new System.Drawing.Point(119, 73);
+        // 
+        numRetryCount.Location = new Point(143, 60);
+        numRetryCount.Margin = new Padding(4);
         numRetryCount.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
         numRetryCount.Name = "numRetryCount";
-        numRetryCount.Size = new System.Drawing.Size(60, 23);
+        numRetryCount.Size = new Size(48, 27);
         numRetryCount.TabIndex = 3;
         numRetryCount.Value = new decimal(new int[] { 2, 0, 0, 0 });
-
+        // 
         // numRetryDelayMs
+        // 
         numRetryDelayMs.Increment = new decimal(new int[] { 250, 0, 0, 0 });
-        numRetryDelayMs.Location = new System.Drawing.Point(185, 73);
+        numRetryDelayMs.Location = new Point(207, 60);
+        numRetryDelayMs.Margin = new Padding(4);
         numRetryDelayMs.Maximum = new decimal(new int[] { 30000, 0, 0, 0 });
         numRetryDelayMs.Name = "numRetryDelayMs";
-        numRetryDelayMs.Size = new System.Drawing.Size(80, 23);
+        numRetryDelayMs.Size = new Size(91, 27);
         numRetryDelayMs.TabIndex = 4;
         numRetryDelayMs.Value = new decimal(new int[] { 1000, 0, 0, 0 });
-
+        // 
+        // grpPagesLog
+        // 
+        grpPagesLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        grpPagesLog.Controls.Add(txtLog);
+        grpPagesLog.Controls.Add(lblLog);
+        grpPagesLog.Controls.Add(lstPages);
+        grpPagesLog.Controls.Add(lblPages);
+        grpPagesLog.Location = new Point(695, 13);
+        grpPagesLog.Margin = new Padding(4);
+        grpPagesLog.Name = "grpPagesLog";
+        grpPagesLog.Padding = new Padding(4);
+        grpPagesLog.Size = new Size(388, 578);
+        grpPagesLog.TabIndex = 7;
+        grpPagesLog.TabStop = false;
+        grpPagesLog.Text = "页面与日志";
+        // 
+        // txtLog
+        // 
+        txtLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        txtLog.Location = new Point(19, 207);
+        txtLog.Margin = new Padding(4);
+        txtLog.Multiline = true;
+        txtLog.Name = "txtLog";
+        txtLog.ReadOnly = true;
+        txtLog.ScrollBars = ScrollBars.Both;
+        txtLog.Size = new Size(348, 364);
+        txtLog.TabIndex = 3;
+        txtLog.WordWrap = false;
+        // 
+        // lblLog
+        // 
+        lblLog.AutoSize = true;
+        lblLog.Location = new Point(19, 180);
+        lblLog.Margin = new Padding(4, 0, 4, 0);
+        lblLog.Name = "lblLog";
+        lblLog.Size = new Size(84, 20);
+        lblLog.TabIndex = 2;
+        lblLog.Text = "日志输出：";
+        // 
+        // lstPages
+        // 
+        lstPages.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        lstPages.FormattingEnabled = true;
+        lstPages.Location = new Point(19, 67);
+        lstPages.Margin = new Padding(4);
+        lstPages.Name = "lstPages";
+        lstPages.Size = new Size(348, 104);
+        lstPages.TabIndex = 1;
+        lstPages.SelectedIndexChanged += lstPages_SelectedIndexChanged;
+        // 
+        // lblPages
+        // 
+        lblPages.AutoSize = true;
+        lblPages.Location = new Point(19, 40);
+        lblPages.Margin = new Padding(4, 0, 4, 0);
+        lblPages.Name = "lblPages";
+        lblPages.Size = new Size(111, 20);
+        lblPages.TabIndex = 0;
+        lblPages.Text = "页面 (Pages)：";
+        // 
+        // txtPostNavScript
+        // 
+        txtPostNavScript.Location = new Point(22, 131);
+        txtPostNavScript.Margin = new Padding(4);
+        txtPostNavScript.Name = "txtPostNavScript";
+        txtPostNavScript.Size = new Size(276, 27);
+        txtPostNavScript.TabIndex = 3;
+        // 
+        // chkPostNavScript
+        // 
+        chkPostNavScript.AutoSize = true;
+        chkPostNavScript.Location = new Point(23, 99);
+        chkPostNavScript.Margin = new Padding(4);
+        chkPostNavScript.Name = "chkPostNavScript";
+        chkPostNavScript.Size = new Size(170, 24);
+        chkPostNavScript.TabIndex = 2;
+        chkPostNavScript.Text = "导航后执行 Evaluate";
+        chkPostNavScript.UseVisualStyleBackColor = true;
+        // 
+        // txtInitScript
+        // 
+        txtInitScript.Location = new Point(23, 64);
+        txtInitScript.Margin = new Padding(4);
+        txtInitScript.Name = "txtInitScript";
+        txtInitScript.Size = new Size(275, 27);
+        txtInitScript.TabIndex = 1;
+        // 
+        // chkInitScript
+        // 
+        chkInitScript.AutoSize = true;
+        chkInitScript.Location = new Point(23, 32);
+        chkInitScript.Margin = new Padding(4);
+        chkInitScript.Name = "chkInitScript";
+        chkInitScript.Size = new Size(278, 24);
+        chkInitScript.TabIndex = 0;
+        chkInitScript.Text = "AddInitScript（所有页面自动注入）";
+        chkInitScript.UseVisualStyleBackColor = true;
+        // 
+        // grpScripts
+        // 
+        grpScripts.Controls.Add(chkInitScript);
+        grpScripts.Controls.Add(txtInitScript);
+        grpScripts.Controls.Add(chkPostNavScript);
+        grpScripts.Controls.Add(txtPostNavScript);
+        grpScripts.Location = new Point(374, 306);
+        grpScripts.Margin = new Padding(4);
+        grpScripts.Name = "grpScripts";
+        grpScripts.Padding = new Padding(4);
+        grpScripts.Size = new Size(313, 174);
+        grpScripts.TabIndex = 4;
+        grpScripts.TabStop = false;
+        grpScripts.Text = "脚本注入";
+        // 
+        // btnOpenNewTab
+        // 
+        btnOpenNewTab.Location = new Point(171, 76);
+        btnOpenNewTab.Margin = new Padding(4);
+        btnOpenNewTab.Name = "btnOpenNewTab";
+        btnOpenNewTab.Size = new Size(166, 36);
+        btnOpenNewTab.TabIndex = 4;
+        btnOpenNewTab.Text = "新开 Tab";
+        btnOpenNewTab.UseVisualStyleBackColor = true;
+        btnOpenNewTab.Click += btnOpenNewTab_Click;
+        // 
+        // txtNewTabUrl
+        // 
+        txtNewTabUrl.Location = new Point(14, 124);
+        txtNewTabUrl.Margin = new Padding(4);
+        txtNewTabUrl.Name = "txtNewTabUrl";
+        txtNewTabUrl.Size = new Size(323, 27);
+        txtNewTabUrl.TabIndex = 3;
+        txtNewTabUrl.Text = "https://example.com";
+        // 
+        // btnRefreshPages
+        // 
+        btnRefreshPages.Location = new Point(14, 76);
+        btnRefreshPages.Margin = new Padding(4);
+        btnRefreshPages.Name = "btnRefreshPages";
+        btnRefreshPages.Size = new Size(132, 40);
+        btnRefreshPages.TabIndex = 2;
+        btnRefreshPages.Text = "刷新页面列表";
+        btnRefreshPages.UseVisualStyleBackColor = true;
+        btnRefreshPages.Click += btnRefreshPages_Click;
+        // 
+        // btnExportJsonProtocol
+        // 
+        btnExportJsonProtocol.Location = new Point(171, 28);
+        btnExportJsonProtocol.Margin = new Padding(4);
+        btnExportJsonProtocol.Name = "btnExportJsonProtocol";
+        btnExportJsonProtocol.Size = new Size(166, 40);
+        btnExportJsonProtocol.TabIndex = 1;
+        btnExportJsonProtocol.Text = "导出 /json/protocol";
+        btnExportJsonProtocol.UseVisualStyleBackColor = true;
+        btnExportJsonProtocol.Click += btnExportJsonProtocol_Click;
+        // 
+        // btnExportJsonList
+        // 
+        btnExportJsonList.Location = new Point(14, 28);
+        btnExportJsonList.Margin = new Padding(4);
+        btnExportJsonList.Name = "btnExportJsonList";
+        btnExportJsonList.Size = new Size(132, 40);
+        btnExportJsonList.TabIndex = 0;
+        btnExportJsonList.Text = "导出 /json/list";
+        btnExportJsonList.UseVisualStyleBackColor = true;
+        btnExportJsonList.Click += btnExportJsonList_Click;
+        // 
         // grpUtilities
-        grpUtilities.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+        // 
         grpUtilities.Controls.Add(btnExportJsonList);
         grpUtilities.Controls.Add(btnExportJsonProtocol);
         grpUtilities.Controls.Add(btnRefreshPages);
         grpUtilities.Controls.Add(txtNewTabUrl);
         grpUtilities.Controls.Add(btnOpenNewTab);
-        grpUtilities.Location = new System.Drawing.Point(460, 475);
+        grpUtilities.Location = new Point(13, 414);
+        grpUtilities.Margin = new Padding(4);
         grpUtilities.Name = "grpUtilities";
-        grpUtilities.Size = new System.Drawing.Size(430, 120);
+        grpUtilities.Padding = new Padding(4);
+        grpUtilities.Size = new Size(353, 177);
         grpUtilities.TabIndex = 6;
         grpUtilities.TabStop = false;
         grpUtilities.Text = "实用工具";
-
-        // btnExportJsonList
-        btnExportJsonList.Location = new System.Drawing.Point(18, 30);
-        btnExportJsonList.Name = "btnExportJsonList";
-        btnExportJsonList.Size = new System.Drawing.Size(150, 30);
-        btnExportJsonList.TabIndex = 0;
-        btnExportJsonList.Text = "导出 /json/list";
-        btnExportJsonList.UseVisualStyleBackColor = true;
-        btnExportJsonList.Click += btnExportJsonList_Click;
-
-        // btnExportJsonProtocol
-        btnExportJsonProtocol.Location = new System.Drawing.Point(180, 30);
-        btnExportJsonProtocol.Name = "btnExportJsonProtocol";
-        btnExportJsonProtocol.Size = new System.Drawing.Size(150, 30);
-        btnExportJsonProtocol.TabIndex = 1;
-        btnExportJsonProtocol.Text = "导出 /json/protocol";
-        btnExportJsonProtocol.UseVisualStyleBackColor = true;
-        btnExportJsonProtocol.Click += btnExportJsonProtocol_Click;
-
-        // btnRefreshPages
-        btnRefreshPages.Location = new System.Drawing.Point(18, 75);
-        btnRefreshPages.Name = "btnRefreshPages";
-        btnRefreshPages.Size = new System.Drawing.Size(150, 30);
-        btnRefreshPages.TabIndex = 2;
-        btnRefreshPages.Text = "刷新页面列表";
-        btnRefreshPages.UseVisualStyleBackColor = true;
-        btnRefreshPages.Click += btnRefreshPages_Click;
-
-        // txtNewTabUrl
-        txtNewTabUrl.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        txtNewTabUrl.Location = new System.Drawing.Point(180, 80);
-        txtNewTabUrl.Name = "txtNewTabUrl";
-        txtNewTabUrl.Size = new System.Drawing.Size(160, 23);
-        txtNewTabUrl.TabIndex = 3;
-        txtNewTabUrl.Text = "https://example.com";
-
-        // btnOpenNewTab
-        btnOpenNewTab.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-        btnOpenNewTab.Location = new System.Drawing.Point(350, 78);
-        btnOpenNewTab.Name = "btnOpenNewTab";
-        btnOpenNewTab.Size = new System.Drawing.Size(70, 27);
-        btnOpenNewTab.TabIndex = 4;
-        btnOpenNewTab.Text = "新开 Tab";
-        btnOpenNewTab.UseVisualStyleBackColor = true;
-        btnOpenNewTab.Click += btnOpenNewTab_Click;
-
-        // grpPagesLog
-        grpPagesLog.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        grpPagesLog.Controls.Add(txtLog);
-        grpPagesLog.Controls.Add(lblLog);
-        grpPagesLog.Controls.Add(lstPages);
-        grpPagesLog.Controls.Add(lblPages);
-        grpPagesLog.Location = new System.Drawing.Point(300, 555);
-        grpPagesLog.Name = "grpPagesLog";
-        grpPagesLog.Size = new System.Drawing.Size(590, 205);
-        grpPagesLog.TabIndex = 7;
-        grpPagesLog.TabStop = false;
-        grpPagesLog.Text = "页面与日志";
-
-        // lblPages
-        lblPages.AutoSize = true;
-        lblPages.Location = new System.Drawing.Point(15, 30);
-        lblPages.Name = "lblPages";
-        lblPages.Size = new System.Drawing.Size(80, 15);
-        lblPages.TabIndex = 0;
-        lblPages.Text = "页面 (Pages)：";
-
-        // lstPages
-        lstPages.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        lstPages.FormattingEnabled = true;
-        lstPages.ItemHeight = 15;
-        lstPages.Location = new System.Drawing.Point(15, 50);
-        lstPages.Name = "lstPages";
-        lstPages.Size = new System.Drawing.Size(560, 79);
-        lstPages.TabIndex = 1;
-        lstPages.SelectedIndexChanged += lstPages_SelectedIndexChanged;
-
-        // lblLog
-        lblLog.AutoSize = true;
-        lblLog.Location = new System.Drawing.Point(15, 135);
-        lblLog.Name = "lblLog";
-        lblLog.Size = new System.Drawing.Size(68, 15);
-        lblLog.TabIndex = 2;
-        lblLog.Text = "日志输出：";
-
-        // txtLog
-        txtLog.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-        txtLog.Location = new System.Drawing.Point(15, 155);
-        txtLog.Multiline = true;
-        txtLog.Name = "txtLog";
-        txtLog.ReadOnly = true;
-        txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-        txtLog.Size = new System.Drawing.Size(560, 45);
-        txtLog.TabIndex = 3;
-        txtLog.WordWrap = false;
-
+        // 
         // MainForm
-        AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-        AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-        ClientSize = new System.Drawing.Size(900, 760);
+        // 
+        AutoScaleDimensions = new SizeF(9F, 20F);
+        AutoScaleMode = AutoScaleMode.Font;
+        ClientSize = new Size(1096, 599);
         Controls.Add(grpPagesLog);
         Controls.Add(grpUtilities);
         Controls.Add(grpAdvanced);
@@ -610,26 +685,38 @@ partial class MainForm
         Controls.Add(grpAutomation);
         Controls.Add(grpWorkflow);
         Controls.Add(grpConnection);
+        Margin = new Padding(4);
         Name = "MainForm";
         Text = "External Browser (CDP) Launcher - WinForms";
-        ((System.ComponentModel.ISupportInitialize)numPort).EndInit();
-        ((System.ComponentModel.ISupportInitialize)numRetryCount).EndInit();
-        ((System.ComponentModel.ISupportInitialize)numRetryDelayMs).EndInit();
         grpConnection.ResumeLayout(false);
         grpConnection.PerformLayout();
+        ((System.ComponentModel.ISupportInitialize)numPort).EndInit();
         grpWorkflow.ResumeLayout(false);
         grpAutomation.ResumeLayout(false);
         grpAutomation.PerformLayout();
         grpNetwork.ResumeLayout(false);
         grpNetwork.PerformLayout();
-        grpScripts.ResumeLayout(false);
-        grpScripts.PerformLayout();
         grpAdvanced.ResumeLayout(false);
         grpAdvanced.PerformLayout();
-        grpUtilities.ResumeLayout(false);
-        grpUtilities.PerformLayout();
+        ((System.ComponentModel.ISupportInitialize)numRetryCount).EndInit();
+        ((System.ComponentModel.ISupportInitialize)numRetryDelayMs).EndInit();
         grpPagesLog.ResumeLayout(false);
         grpPagesLog.PerformLayout();
+        grpScripts.ResumeLayout(false);
+        grpScripts.PerformLayout();
+        grpUtilities.ResumeLayout(false);
+        grpUtilities.PerformLayout();
         ResumeLayout(false);
     }
+    private TextBox txtPostNavScript;
+    private CheckBox chkPostNavScript;
+    private TextBox txtInitScript;
+    private CheckBox chkInitScript;
+    private GroupBox grpScripts;
+    private Button btnOpenNewTab;
+    private TextBox txtNewTabUrl;
+    private Button btnRefreshPages;
+    private Button btnExportJsonProtocol;
+    private Button btnExportJsonList;
+    private GroupBox grpUtilities;
 }

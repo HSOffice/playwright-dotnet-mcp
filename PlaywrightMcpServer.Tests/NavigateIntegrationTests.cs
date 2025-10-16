@@ -21,7 +21,7 @@ public class NavigateIntegrationTests
 
         pageMock.SetupGet(p => p.Url).Returns(url);
         pageMock.Setup(p => p.GotoAsync(It.IsAny<string>(), It.IsAny<PageGotoOptions?>()))
-            .Returns<string, PageGotoOptions?>((requestedUrl, _) =>
+            .Returns<string, PageGotoOptions?>((requestedUrl, options) =>
             {
                 Assert.Equal(url, requestedUrl);
                 _ = Task.Run(async () =>

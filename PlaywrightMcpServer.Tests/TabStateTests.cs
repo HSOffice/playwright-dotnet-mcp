@@ -271,21 +271,7 @@ public class TabStateTests
 
         pageMock.Verify(p => p.EvaluateAsync<object>(
             "(ms) => new Promise(resolve => setTimeout(resolve, ms))",
-            It.Is<object?>(arg =>
-            {
-                if (arg == null)
-                {
-                    return false;
-                }
-
-                if (arg.GetType() != typeof(double))
-                {
-                    return false;
-                }
-
-                var value = (double)arg;
-                return Math.Abs(value - 250d) < 0.001;
-            })), Times.Once);
+            It.Is<object?>(arg => arg is double value && Math.Abs(value - 250d) < 0.001)), Times.Once);
     }
 
     [Fact]

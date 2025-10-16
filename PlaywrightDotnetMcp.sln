@@ -8,6 +8,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlaywrightRemoteBrowserLaun
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlaywrightMcpServer.Tests", "PlaywrightMcpServer.Tests/PlaywrightMcpServer.Tests.csproj", "{C7374F4B-618B-49DD-ACAA-8280044F961D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebView2BrowserHost", "WebView2BrowserHost/WebView2BrowserHost.csproj", "{8843B0DD-BD4A-4DB1-AFB0-2EE8730863D9}"
+EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
         Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
         {C7374F4B-618B-49DD-ACAA-8280044F961D}.Debug|Any CPU.Build.0 = Debug|Any CPU
         {C7374F4B-618B-49DD-ACAA-8280044F961D}.Release|Any CPU.ActiveCfg = Release|Any CPU
         {C7374F4B-618B-49DD-ACAA-8280044F961D}.Release|Any CPU.Build.0 = Release|Any CPU
+        {8843B0DD-BD4A-4DB1-AFB0-2EE8730863D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {8843B0DD-BD4A-4DB1-AFB0-2EE8730863D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {8843B0DD-BD4A-4DB1-AFB0-2EE8730863D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {8843B0DD-BD4A-4DB1-AFB0-2EE8730863D9}.Release|Any CPU.Build.0 = Release|Any CPU
     EndGlobalSection
     GlobalSection(SolutionProperties) = preSolution
         HideSolutionNode = FALSE

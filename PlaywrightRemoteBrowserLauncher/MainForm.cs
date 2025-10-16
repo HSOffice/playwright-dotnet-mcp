@@ -63,7 +63,7 @@ public partial class MainForm : Form
             }
         });
 
-        txtExePath.Text = @"..\..\..\..\WinFormsApp\bin\Debug\net8.0-windows\WinFormsApp.exe";
+        txtExePath.Text = @"..\..\..\..\WebView2BrowserHost\bin\Debug\net8.0-windows\WebView2BrowserHost.exe";
         numPort.Value = 9222;
         txtStartUrl.Text = "https://example.com";
     }

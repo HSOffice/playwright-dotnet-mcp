@@ -1,6 +1,6 @@
 using System.Windows.Forms;
 
-namespace ExternalBrowserWinForms.Extensions;
+namespace PlaywrightRemoteBrowserLauncher.Extensions;
 
 public static class ControlExtensions
 {

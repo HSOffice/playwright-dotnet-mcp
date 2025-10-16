@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace ExternalBrowserWinForms.Services;
+namespace PlaywrightRemoteBrowserLauncher.Services;
 
 public sealed class BrowserProcessLauncher : IDisposable
 {

@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace ExternalBrowserWinForms;
+namespace PlaywrightRemoteBrowserLauncher;
 
 internal static class Program
 {

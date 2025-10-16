@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace ExternalBrowserWinForms;
+namespace PlaywrightRemoteBrowserLauncher;
 
 partial class MainForm
 {

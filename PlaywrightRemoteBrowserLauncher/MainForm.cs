@@ -1,9 +1,9 @@
-using ExternalBrowserWinForms.Extensions;
-using ExternalBrowserWinForms.Models;
-using ExternalBrowserWinForms.Services;
+using PlaywrightRemoteBrowserLauncher.Extensions;
+using PlaywrightRemoteBrowserLauncher.Models;
+using PlaywrightRemoteBrowserLauncher.Services;
 using Microsoft.Playwright;
 
-namespace ExternalBrowserWinForms;
+namespace PlaywrightRemoteBrowserLauncher;
 
 public partial class MainForm : Form
 {
@@ -29,7 +29,7 @@ public partial class MainForm : Form
             desktop = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         }
 
-        _storageRoot = Path.Combine(desktop, "ExternalBrowserWinForms");
+        _storageRoot = Path.Combine(desktop, "PlaywrightRemoteBrowserLauncher");
         Directory.CreateDirectory(_storageRoot);
 
         _logsRoot = Path.Combine(_storageRoot, "Logs");

@@ -1,7 +1,7 @@
 using System.Net.Http;
 using System.Text.Json;
 
-namespace ExternalBrowserWinForms.Services;
+namespace PlaywrightRemoteBrowserLauncher.Services;
 
 public static class DevToolsEndpointWatcher
 {

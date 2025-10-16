@@ -1,4 +1,4 @@
-namespace ExternalBrowserWinForms.Services;
+namespace PlaywrightRemoteBrowserLauncher.Services;
 
 public sealed class ContextConfiguration
 {

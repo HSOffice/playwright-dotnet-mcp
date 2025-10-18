@@ -12,6 +12,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebView2BrowserHost", "WebV
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CefBrowserHost", "CefBrowserHost/CefBrowserHost.csproj", "{A0AF6955-2204-45DE-9490-24D07BE4303A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DetectBrowserProcess", "DetectBrowserProcess/DetectBrowserProcess.csproj", "{DC1763F4-7839-4681-8FCE-5CE7F8AEE30A}"
+EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
         Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
         {A0AF6955-2204-45DE-9490-24D07BE4303A}.Debug|Any CPU.Build.0 = Debug|Any CPU
         {A0AF6955-2204-45DE-9490-24D07BE4303A}.Release|Any CPU.ActiveCfg = Release|Any CPU
         {A0AF6955-2204-45DE-9490-24D07BE4303A}.Release|Any CPU.Build.0 = Release|Any CPU
+        {DC1763F4-7839-4681-8FCE-5CE7F8AEE30A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {DC1763F4-7839-4681-8FCE-5CE7F8AEE30A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {DC1763F4-7839-4681-8FCE-5CE7F8AEE30A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {DC1763F4-7839-4681-8FCE-5CE7F8AEE30A}.Release|Any CPU.Build.0 = Release|Any CPU
     EndGlobalSection
     GlobalSection(SolutionProperties) = preSolution
         HideSolutionNode = FALSE

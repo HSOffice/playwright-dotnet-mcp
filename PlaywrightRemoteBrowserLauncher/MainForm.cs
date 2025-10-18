@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using PlaywrightRemoteBrowserLauncher.Extensions;
 using PlaywrightRemoteBrowserLauncher.Models;
 using PlaywrightRemoteBrowserLauncher.Services;
@@ -7,15 +9,8 @@ namespace PlaywrightRemoteBrowserLauncher;
 
 public partial class MainForm : Form
 {
-    private readonly string _storageRoot;
-    private readonly string _logsRoot;
-    private readonly string _screenshotsRoot;
-    private readonly string _downloadsRoot;
-    private readonly string _userDataRoot;
-    private readonly string _runLogPath;
-    private readonly LoggingManager _loggingManager;
+    private readonly Lazy<RuntimeState> _runtime;
     private readonly BrowserProcessLauncher _processLauncher = new();
-    private readonly PlaywrightController _playwright;
 
     private CancellationTokenSource? _waitCancellation;
 
@@ -23,54 +18,41 @@ public partial class MainForm : Form
     {
         InitializeComponent();
 
-        var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-        if (string.IsNullOrWhiteSpace(desktop) || !Directory.Exists(desktop))
+        _runtime = new Lazy<RuntimeState>(() => RuntimeState.Create(AppendLog));
+
+        if (IsDesignMode())
         {
-            desktop = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return;
         }
 
-        _storageRoot = Path.Combine(desktop, "PlaywrightRemoteBrowserLauncher");
-        Directory.CreateDirectory(_storageRoot);
-
-        _logsRoot = Path.Combine(_storageRoot, "Logs");
-        Directory.CreateDirectory(_logsRoot);
-        _screenshotsRoot = Path.Combine(_storageRoot, "Screenshots");
-        Directory.CreateDirectory(_screenshotsRoot);
-        _downloadsRoot = Path.Combine(_storageRoot, "Downloads");
-        Directory.CreateDirectory(_downloadsRoot);
-        _userDataRoot = Path.Combine(_storageRoot, "UserData");
-        Directory.CreateDirectory(_userDataRoot);
-
-        _runLogPath = Path.Combine(_logsRoot, $"run-{DateTime.Now:yyyyMMdd}.log");
-        _loggingManager = new LoggingManager(_logsRoot, AppendLog);
-        _playwright = new PlaywrightController(_loggingManager, AppendLog);
-        _playwright.PageAttached += page => lstPages.InvokeSafe(() =>
-        {
-            lstPages.Items.Add(page);
-            if (lstPages.SelectedIndex < 0)
-            {
-                lstPages.SelectedIndex = 0;
-            }
-        });
-        _playwright.PageClosed += page => lstPages.InvokeSafe(() =>
-        {
-            for (var i = lstPages.Items.Count - 1; i >= 0; i--)
-            {
-                if (lstPages.Items[i] is PageItem item && ReferenceEquals(item.Page, page))
-                {
-                    lstPages.Items.RemoveAt(i);
-                }
-            }
-        });
+        var runtime = Runtime;
+        runtime.Playwright.PageAttached += OnPageAttached;
+        runtime.Playwright.PageClosed += OnPageClosed;
 
         txtExePath.Text = @"..\..\..\..\WebView2BrowserHost\bin\Debug\net8.0-windows\WebView2BrowserHost.exe";
         numPort.Value = 9222;
         txtStartUrl.Text = "https://example.com";
     }
 
+    private RuntimeState Runtime => _runtime.Value;
+
+    private LoggingManager LoggingManager => Runtime.LoggingManager;
+
+    private PlaywrightController Playwright => Runtime.Playwright;
+
+    private string LogsRoot => Runtime.LogsRoot;
+
+    private string DownloadsRoot => Runtime.DownloadsRoot;
+
+    private string UserDataRoot => Runtime.UserDataRoot;
+
+    private string ScreenshotsRoot => Runtime.ScreenshotsRoot;
+
+    private string RunLogPath => Runtime.RunLogPath;
+
     private PageItem? SelectedItem => lstPages.SelectedItem as PageItem;
 
-    private IPage? SelectedPage => SelectedItem?.Page ?? _playwright.CurrentPage;
+    private IPage? SelectedPage => SelectedItem?.Page ?? Playwright.CurrentPage;
 
     private void AppendLog(string message)
     {
@@ -80,9 +62,14 @@ public partial class MainForm : Form
             txtLog.AppendText(line + Environment.NewLine);
         });
 
+        if (!_runtime.IsValueCreated)
+        {
+            return;
+        }
+
         try
         {
-            File.AppendAllText(_runLogPath, line + Environment.NewLine);
+            File.AppendAllText(RunLogPath, line + Environment.NewLine);
         }
         catch
         {
@@ -92,7 +79,7 @@ public partial class MainForm : Form
 
     private async void btnLaunch_Click(object sender, EventArgs e)
     {
-        Directory.CreateDirectory(_userDataRoot);
+        Directory.CreateDirectory(UserDataRoot);
         var commandLine = txtExePath.Text.Trim();
         var portFromCommandLine = ExtractRemoteDebuggingPort(commandLine);
         if (portFromCommandLine is int parsedPort)
@@ -110,7 +97,7 @@ public partial class MainForm : Form
         var started = _processLauncher.Start(
             commandLine,
             (int)numPort.Value,
-            _userDataRoot,
+            UserDataRoot,
             txtProxy.Text.Trim(),
             AppendLog);
 
@@ -189,7 +176,7 @@ public partial class MainForm : Form
         btnConnect.Enabled = false;
         try
         {
-            await _playwright.ConnectAsync((int)numPort.Value);
+            await Playwright.ConnectAsync((int)numPort.Value);
             btnNewPage.Enabled = true;
         }
         catch (Exception ex)
@@ -202,7 +189,7 @@ public partial class MainForm : Form
     {
         try
         {
-            var harPath = Path.Combine(_logsRoot, $"har-{DateTime.Now:yyyyMMdd-HHmmss}.har");
+            var harPath = Path.Combine(LogsRoot, $"har-{DateTime.Now:yyyyMMdd-HHmmss}.har");
             var config = new ContextConfiguration
             {
                 IgnoreHttpsErrors = chkIgnoreTls.Checked,
@@ -213,9 +200,9 @@ public partial class MainForm : Form
                 RecordHarPath = harPath
             };
 
-            await _playwright.EnsureContextAsync(config);
-            Directory.CreateDirectory(_downloadsRoot);
-            await _playwright.CreatePageAsync(_downloadsRoot);
+            await Playwright.EnsureContextAsync(config);
+            Directory.CreateDirectory(DownloadsRoot);
+            await Playwright.CreatePageAsync(DownloadsRoot);
             btnGoto.Enabled = true;
         }
         catch (Exception ex)
@@ -234,10 +221,10 @@ public partial class MainForm : Form
         }
 
         var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
-        var success = await _playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null);
+        var success = await Playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null);
         if (success && chkAutoScreenshot.Checked)
         {
-            await _playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
+            await Playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
         }
     }
 
@@ -246,14 +233,14 @@ public partial class MainForm : Form
         var state = ProtectButtonsDuringRunAll();
         try
         {
-            Directory.CreateDirectory(_userDataRoot);
-            if (!_processLauncher.Start(txtExePath.Text.Trim(), (int)numPort.Value, _userDataRoot, txtProxy.Text.Trim(), AppendLog))
+            Directory.CreateDirectory(UserDataRoot);
+            if (!_processLauncher.Start(txtExePath.Text.Trim(), (int)numPort.Value, UserDataRoot, txtProxy.Text.Trim(), AppendLog))
             {
                 return;
             }
 
             btnWaitDevTools_Click(sender, e);
-            await _playwright.ConnectAsync((int)numPort.Value);
+            await Playwright.ConnectAsync((int)numPort.Value);
             var config = new ContextConfiguration
             {
                 IgnoreHttpsErrors = chkIgnoreTls.Checked,
@@ -262,13 +249,13 @@ public partial class MainForm : Form
                 ExposedFunctionName = string.IsNullOrWhiteSpace(txtExposeName.Text) ? "dotnetPing" : txtExposeName.Text.Trim(),
                 RecordHar = false
             };
-            await _playwright.EnsureContextAsync(config);
-            Directory.CreateDirectory(_downloadsRoot);
-            var page = await _playwright.CreatePageAsync(_downloadsRoot);
+            await Playwright.EnsureContextAsync(config);
+            Directory.CreateDirectory(DownloadsRoot);
+            var page = await Playwright.CreatePageAsync(DownloadsRoot);
             var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
-            if (await _playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null) && chkAutoScreenshot.Checked)
+            if (await Playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null) && chkAutoScreenshot.Checked)
             {
-                await _playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
+                await Playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
             }
 
             btnNewPage.Enabled = true;
@@ -338,7 +325,7 @@ public partial class MainForm : Form
     {
         try
         {
-            _loggingManager.Start();
+            LoggingManager.Start();
             btnStartLogging.Enabled = false;
             btnStopLogging.Enabled = true;
         }
@@ -350,7 +337,7 @@ public partial class MainForm : Form
 
     private void btnStopLogging_Click(object sender, EventArgs e)
     {
-        _loggingManager.Stop();
+        LoggingManager.Stop();
         btnStartLogging.Enabled = true;
         btnStopLogging.Enabled = false;
     }
@@ -358,10 +345,10 @@ public partial class MainForm : Form
     private void btnSaveSnapshot_Click(object sender, EventArgs e)
     {
         var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-        var directory = Path.Combine(_logsRoot, $"snapshot-{stamp}");
+        var directory = Path.Combine(LogsRoot, $"snapshot-{stamp}");
         try
         {
-            _ = _playwright.SaveSnapshotAsync(directory, (int)numPort.Value);
+            _ = Playwright.SaveSnapshotAsync(directory, (int)numPort.Value);
         }
         catch (Exception ex)
         {
@@ -371,25 +358,25 @@ public partial class MainForm : Form
 
     private void btnExportJsonList_Click(object sender, EventArgs e)
     {
-        var path = Path.Combine(_logsRoot, $"json-list-{DateTime.Now:yyyyMMdd-HHmmss}.json");
-        _ = _playwright.ExportJsonAsync($"http://127.0.0.1:{(int)numPort.Value}/json/list", path);
+        var path = Path.Combine(LogsRoot, $"json-list-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+        _ = Playwright.ExportJsonAsync($"http://127.0.0.1:{(int)numPort.Value}/json/list", path);
     }
 
     private void btnExportJsonProtocol_Click(object sender, EventArgs e)
     {
-        var path = Path.Combine(_logsRoot, $"json-protocol-{DateTime.Now:yyyyMMdd-HHmmss}.json");
-        _ = _playwright.ExportJsonAsync($"http://127.0.0.1:{(int)numPort.Value}/json/protocol", path);
+        var path = Path.Combine(LogsRoot, $"json-protocol-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+        _ = Playwright.ExportJsonAsync($"http://127.0.0.1:{(int)numPort.Value}/json/protocol", path);
     }
 
     private async void btnRefreshPages_Click(object sender, EventArgs e)
     {
         lstPages.Items.Clear();
-        if (_playwright.Context is null)
+        if (Playwright.Context is null)
         {
             return;
         }
 
-        foreach (var page in _playwright.Context.Pages)
+        foreach (var page in Playwright.Context.Pages)
         {
             await Task.Yield();
             lstPages.Items.Add(new PageItem(page, await page.TitleAsync()));
@@ -398,25 +385,25 @@ public partial class MainForm : Form
 
     private async void btnOpenNewTab_Click(object sender, EventArgs e)
     {
-        if (_playwright.Context is null)
+        if (Playwright.Context is null)
         {
             AppendLog("尚未连接 / 创建 Context。");
             return;
         }
 
-        var page = await _playwright.Context.NewPageAsync();
+        var page = await Playwright.Context.NewPageAsync();
         if (!string.IsNullOrWhiteSpace(txtNewTabUrl.Text))
         {
             await page.GotoAsync(txtNewTabUrl.Text.Trim());
         }
 
-        _playwright.SelectPage(page);
+        Playwright.SelectPage(page);
         AppendLog("新开标签页");
     }
 
     private void lstPages_SelectedIndexChanged(object sender, EventArgs e)
     {
-        _playwright.SelectPage(SelectedPage);
+        Playwright.SelectPage(SelectedPage);
         AppendLog($"切换当前页面为：{SelectedItem?.Name ?? "(unknown)"}");
     }
 
@@ -445,7 +432,12 @@ public partial class MainForm : Form
     private async Task CleanupAsync()
     {
         _waitCancellation?.Cancel();
-        await _playwright.CleanupAsync();
+        if (!_runtime.IsValueCreated)
+        {
+            return;
+        }
+
+        await Playwright.CleanupAsync();
         lstPages.Items.Clear();
     }
 
@@ -458,7 +450,126 @@ public partial class MainForm : Form
 
     private string GenerateScreenshotPath()
     {
-        Directory.CreateDirectory(_screenshotsRoot);
-        return Path.Combine(_screenshotsRoot, $"page-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+        Directory.CreateDirectory(ScreenshotsRoot);
+        return Path.Combine(ScreenshotsRoot, $"page-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+    }
+
+    private void OnPageAttached(PageItem page)
+    {
+        lstPages.InvokeSafe(() =>
+        {
+            lstPages.Items.Add(page);
+            if (lstPages.SelectedIndex < 0)
+            {
+                lstPages.SelectedIndex = 0;
+            }
+        });
+    }
+
+    private void OnPageClosed(IPage page)
+    {
+        lstPages.InvokeSafe(() =>
+        {
+            for (var i = lstPages.Items.Count - 1; i >= 0; i--)
+            {
+                if (lstPages.Items[i] is PageItem item && ReferenceEquals(item.Page, page))
+                {
+                    lstPages.Items.RemoveAt(i);
+                }
+            }
+        });
+    }
+
+    private static bool IsDesignMode()
+    {
+        if (LicenseManager.UsageMode == LicenseUsageMode.Designtime)
+        {
+            return true;
+        }
+
+        try
+        {
+            var processName = Process.GetCurrentProcess().ProcessName;
+            return string.Equals(processName, "devenv", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(processName, "Blend", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private sealed class RuntimeState
+    {
+        private RuntimeState(
+            string storageRoot,
+            string logsRoot,
+            string screenshotsRoot,
+            string downloadsRoot,
+            string userDataRoot,
+            string runLogPath,
+            LoggingManager loggingManager,
+            PlaywrightController playwright)
+        {
+            StorageRoot = storageRoot;
+            LogsRoot = logsRoot;
+            ScreenshotsRoot = screenshotsRoot;
+            DownloadsRoot = downloadsRoot;
+            UserDataRoot = userDataRoot;
+            RunLogPath = runLogPath;
+            LoggingManager = loggingManager;
+            Playwright = playwright;
+        }
+
+        public string StorageRoot { get; }
+
+        public string LogsRoot { get; }
+
+        public string ScreenshotsRoot { get; }
+
+        public string DownloadsRoot { get; }
+
+        public string UserDataRoot { get; }
+
+        public string RunLogPath { get; }
+
+        public LoggingManager LoggingManager { get; }
+
+        public PlaywrightController Playwright { get; }
+
+        public static RuntimeState Create(Action<string> appendLog)
+        {
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            if (string.IsNullOrWhiteSpace(desktop) || !Directory.Exists(desktop))
+            {
+                desktop = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            }
+
+            var storageRoot = Path.Combine(desktop, "PlaywrightRemoteBrowserLauncher");
+            Directory.CreateDirectory(storageRoot);
+
+            var logsRoot = Path.Combine(storageRoot, "Logs");
+            Directory.CreateDirectory(logsRoot);
+            var screenshotsRoot = Path.Combine(storageRoot, "Screenshots");
+            Directory.CreateDirectory(screenshotsRoot);
+            var downloadsRoot = Path.Combine(storageRoot, "Downloads");
+            Directory.CreateDirectory(downloadsRoot);
+            var userDataRoot = Path.Combine(storageRoot, "UserData");
+            Directory.CreateDirectory(userDataRoot);
+
+            var runLogPath = Path.Combine(logsRoot, $"run-{DateTime.Now:yyyyMMdd}.log");
+            var loggingManager = new LoggingManager(logsRoot, appendLog);
+            var playwright = new PlaywrightController(loggingManager, appendLog);
+
+            return new RuntimeState(
+                storageRoot,
+                logsRoot,
+                screenshotsRoot,
+                downloadsRoot,
+                userDataRoot,
+                runLogPath,
+                loggingManager,
+                playwright);
+        }
     }
 }

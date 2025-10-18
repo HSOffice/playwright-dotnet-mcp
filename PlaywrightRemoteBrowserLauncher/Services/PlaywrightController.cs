@@ -1,5 +1,6 @@
-using PlaywrightRemoteBrowserLauncher.Models;
 using Microsoft.Playwright;
+using PlaywrightRemoteBrowserLauncher.Models;
+using System;
 
 namespace PlaywrightRemoteBrowserLauncher.Services;
 
@@ -178,9 +179,27 @@ public sealed class PlaywrightController : IAsyncDisposable
             Directory.CreateDirectory(directory);
         }
 
-        await page.ScreenshotAsync(new PageScreenshotOptions { Path = path, FullPage = true });
-        _log($"📸 已保存截图：{path}");
-        return true;
+        try
+        {
+            await page.ScreenshotAsync(new PageScreenshotOptions
+            {
+                Path = path,
+                FullPage = true,
+                Timeout = 60000
+            });
+            _log($"📸 已保存截图：{path}");
+            return true;
+        }
+        catch (TimeoutException ex)
+        {
+            _log($"截图超时：{ex.Message}");
+        }
+        catch (PlaywrightException ex)
+        {
+            _log($"截图失败：{ex.Message}");
+        }
+
+        return false;
     }
 
     public async Task SaveSnapshotAsync(string directory, int port)
@@ -197,7 +216,19 @@ public sealed class PlaywrightController : IAsyncDisposable
 
         var html = await _primaryPage.ContentAsync();
         await File.WriteAllTextAsync(htmlPath, html);
-        await _primaryPage.ScreenshotAsync(new PageScreenshotOptions { Path = pngPath, FullPage = true });
+        try
+        {
+            await _primaryPage.ScreenshotAsync(new PageScreenshotOptions
+            {
+                Path = pngPath,
+                FullPage = true,
+                Timeout = 60000
+            });
+        }
+        catch (TimeoutException ex)
+        {
+            _log($"保存快照时截图超时：{ex.Message}");
+        }
 
         using var http = new HttpClient();
         var version = await http.GetStringAsync($"http://127.0.0.1:{port}/json/version");

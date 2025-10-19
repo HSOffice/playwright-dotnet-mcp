@@ -413,7 +413,7 @@ public partial class MainForm : Form
             return false;
         }
 
-        if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+        if (uri.Scheme is Uri.UriSchemeHttp or Uri.UriSchemeHttps)
         {
             return Uri.CheckHostName(uri.Host) != UriHostNameType.Unknown;
         }

@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -215,8 +216,17 @@ public partial class MainForm : Form
             return;
         }
 
-        var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
-        var success = await Playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null);
+        var target = ResolveNavigationTarget(txtStartUrl.Text, out var isSearch, out var normalizedInput);
+        if (isSearch)
+        {
+            AppendLog($"输入 \"{normalizedInput}\" 不是网址，已改为 Bing 搜索。");
+        }
+        else if (!string.Equals(target, normalizedInput, StringComparison.Ordinal))
+        {
+            AppendLog($"已自动补全网址为: {target}");
+        }
+
+        var success = await Playwright.NavigateAsync(page, target, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null);
         if (success && chkAutoScreenshot.Checked)
         {
             await Playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
@@ -247,8 +257,17 @@ public partial class MainForm : Form
             await Playwright.EnsureContextAsync(config);
             Directory.CreateDirectory(DownloadsRoot);
             var page = await Playwright.CreatePageAsync(DownloadsRoot);
-            var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
-            if (await Playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null) && chkAutoScreenshot.Checked)
+            var target = ResolveNavigationTarget(txtStartUrl.Text, out var isSearch, out var normalizedInput);
+            if (isSearch)
+            {
+                AppendLog($"输入 \"{normalizedInput}\" 不是网址，已改为 Bing 搜索。");
+            }
+            else if (!string.Equals(target, normalizedInput, StringComparison.Ordinal))
+            {
+                AppendLog($"已自动补全网址为: {target}");
+            }
+
+            if (await Playwright.NavigateAsync(page, target, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null) && chkAutoScreenshot.Checked)
             {
                 await Playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
             }
@@ -349,6 +368,57 @@ public partial class MainForm : Form
         {
             AppendLog("保存快照失败：" + ex.Message);
         }
+    }
+
+    private static string ResolveNavigationTarget(string? input, out bool isSearch, out string normalizedInput)
+    {
+        normalizedInput = string.IsNullOrWhiteSpace(input) ? "https://example.com" : input.Trim();
+
+        if (Uri.TryCreate(normalizedInput, UriKind.Absolute, out var absolute))
+        {
+            if (IsWebAddress(absolute))
+            {
+                isSearch = false;
+                return absolute.ToString();
+            }
+
+            if (!string.IsNullOrEmpty(absolute.Scheme))
+            {
+                isSearch = false;
+                return absolute.ToString();
+            }
+        }
+
+        if (!normalizedInput.Contains(' '))
+        {
+            var withScheme = normalizedInput.Contains("://", StringComparison.Ordinal)
+                ? normalizedInput
+                : $"http://{normalizedInput}";
+
+            if (Uri.TryCreate(withScheme, UriKind.Absolute, out var withHttp) && IsWebAddress(withHttp))
+            {
+                isSearch = false;
+                return withHttp.ToString();
+            }
+        }
+
+        isSearch = true;
+        return $"https://www.bing.com/search?q={Uri.EscapeDataString(normalizedInput)}";
+    }
+
+    private static bool IsWebAddress(Uri uri)
+    {
+        if (string.IsNullOrEmpty(uri.Host))
+        {
+            return false;
+        }
+
+        if (uri.Scheme is Uri.UriSchemeHttp or Uri.UriSchemeHttps)
+        {
+            return Uri.CheckHostName(uri.Host) != UriHostNameType.Unknown;
+        }
+
+        return false;
     }
 
     private void btnExportJsonList_Click(object sender, EventArgs e)

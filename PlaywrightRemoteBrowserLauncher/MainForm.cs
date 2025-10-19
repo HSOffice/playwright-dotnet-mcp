@@ -247,12 +247,35 @@ public partial class MainForm : Form
             return;
         }
 
-        var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
+        var url = BuildNavigationUrl(txtStartUrl.Text);
         var success = await Playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null);
         if (success && chkAutoScreenshot.Checked)
         {
             await Playwright.CaptureScreenshotAsync(GenerateScreenshotPath());
         }
+    }
+
+    private static string BuildNavigationUrl(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return "https://example.com";
+        }
+
+        var trimmedInput = input.Trim();
+        var candidate = trimmedInput;
+
+        if (!candidate.Contains("://", StringComparison.Ordinal))
+        {
+            candidate = $"https://{candidate}";
+        }
+
+        if (Uri.TryCreate(candidate, UriKind.Absolute, out var uri) && !string.IsNullOrWhiteSpace(uri.Host))
+        {
+            return uri.ToString();
+        }
+
+        return $"https://www.bing.com/search?q={Uri.EscapeDataString(trimmedInput)}";
     }
 
     private async void btnRunAll_Click(object sender, EventArgs e)
@@ -279,7 +302,7 @@ public partial class MainForm : Form
             await Playwright.EnsureContextAsync(config);
             Directory.CreateDirectory(DownloadsRoot);
             var page = await Playwright.CreatePageAsync(DownloadsRoot);
-            var url = string.IsNullOrWhiteSpace(txtStartUrl.Text) ? "https://example.com" : txtStartUrl.Text.Trim();
+            var url = BuildNavigationUrl(txtStartUrl.Text);
             if (await Playwright.NavigateAsync(page, url, (int)numRetryCount.Value, (int)numRetryDelayMs.Value, chkPostNavScript.Checked ? txtPostNavScript.Text : null) && chkAutoScreenshot.Checked)
             {
                 await Playwright.CaptureScreenshotAsync(GenerateScreenshotPath());

@@ -189,25 +189,18 @@ public partial class MainForm : Form
     {
         try
         {
-            var harPath = Path.Combine(LogsRoot, $"har-{DateTime.Now:yyyyMMdd-HHmmss}.har");
-            var config = new ContextConfiguration
+            var page = await Playwright.AcquireExistingPageAsync();
+            if (page is null)
             {
-                IgnoreHttpsErrors = chkIgnoreTls.Checked,
-                InitScript = chkInitScript.Checked ? txtInitScript.Text : null,
-                ExposeDotnet = chkExposeDotnet.Checked,
-                ExposedFunctionName = string.IsNullOrWhiteSpace(txtExposeName.Text) ? "dotnetPing" : txtExposeName.Text.Trim(),
-                RecordHar = false,
-                RecordHarPath = harPath
-            };
+                AppendLog("未能找到现有页面，请确认目标浏览器已打开页面。");
+                return;
+            }
 
-            await Playwright.EnsureContextAsync(config);
-            Directory.CreateDirectory(DownloadsRoot);
-            await Playwright.CreatePageAsync(DownloadsRoot);
             btnGoto.Enabled = true;
         }
         catch (Exception ex)
         {
-            AppendLog("创建页面失败：" + ex);
+            AppendLog("获取页面失败：" + ex);
         }
     }
 
@@ -216,7 +209,7 @@ public partial class MainForm : Form
         var page = SelectedPage;
         if (page is null)
         {
-            AppendLog("尚未创建 Page。");
+            AppendLog("尚未获取 Page。");
             return;
         }
 

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PlaywrightRemoteBrowserLauncher.Extensions;
 using PlaywrightRemoteBrowserLauncher.Models;
@@ -255,6 +256,19 @@ public partial class MainForm : Form
         }
     }
 
+    private static readonly Regex UrlPattern = new(
+        "^(https?:\\/\\/)?" +
+        "(" +
+            "localhost" +
+            "|" +
+            "(\\d{1,3}\\.){3}\\d{1,3}" +
+            "|" +
+            "([a-z0-9-]+\\.)+[a-z]{2,}" +
+        ")" +
+        "(:\\d+)?" +
+        "(\\/.*)?$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private static string BuildNavigationUrl(string? input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -263,8 +277,13 @@ public partial class MainForm : Form
         }
 
         var trimmedInput = input.Trim();
-        var candidate = trimmedInput;
 
+        if (!IsLikelyUrl(trimmedInput))
+        {
+            return $"https://www.bing.com/search?q={Uri.EscapeDataString(trimmedInput)}";
+        }
+
+        var candidate = trimmedInput;
         if (!candidate.Contains("://", StringComparison.Ordinal))
         {
             candidate = $"https://{candidate}";
@@ -276,6 +295,16 @@ public partial class MainForm : Form
         }
 
         return $"https://www.bing.com/search?q={Uri.EscapeDataString(trimmedInput)}";
+    }
+
+    private static bool IsLikelyUrl(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input) || input.Contains(' '))
+        {
+            return false;
+        }
+
+        return UrlPattern.IsMatch(input);
     }
 
     private async void btnRunAll_Click(object sender, EventArgs e)

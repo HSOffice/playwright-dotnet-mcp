@@ -1,6 +1,8 @@
 using Microsoft.Playwright;
 using PlaywrightRemoteBrowserLauncher.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PlaywrightRemoteBrowserLauncher.Services;
 
@@ -88,6 +90,59 @@ public sealed class PlaywrightController : IAsyncDisposable
         }
 
         _context.Page += (_, page) => AttachPage(page, downloadDirectory: null);
+    }
+
+    public async Task<IPage?> AcquireExistingPageAsync()
+    {
+        if (_browser is null)
+        {
+            throw new InvalidOperationException("尚未连接浏览器。");
+        }
+
+        if (_context is null)
+        {
+            _context = _browser.Contexts.FirstOrDefault();
+            if (_context is null)
+            {
+                _log("当前浏览器没有可用的上下文。");
+                return null;
+            }
+
+            _context.Page += (_, page) => AttachPage(page, downloadDirectory: null);
+        }
+
+        var pages = _context.Pages;
+        if (pages.Count == 0)
+        {
+            _log("当前上下文中没有任何页面。");
+            return null;
+        }
+
+        foreach (var page in pages)
+        {
+            AttachPage(page, downloadDirectory: null);
+        }
+
+        _primaryPage = pages[0];
+
+        try
+        {
+            var title = await _primaryPage.TitleAsync();
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                _log($"✅ 已获取页面：{title}");
+            }
+            else
+            {
+                _log("✅ 已获取现有页面。");
+            }
+        }
+        catch (Exception ex)
+        {
+            _log("已获取现有页面，但读取标题失败：" + ex.Message);
+        }
+
+        return _primaryPage;
     }
 
     public async Task<IPage> CreatePageAsync(string downloadDirectory)

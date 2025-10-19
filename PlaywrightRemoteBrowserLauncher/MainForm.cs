@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using PlaywrightRemoteBrowserLauncher.Extensions;
 using PlaywrightRemoteBrowserLauncher.Models;
 using PlaywrightRemoteBrowserLauncher.Services;
@@ -196,6 +197,7 @@ public partial class MainForm : Form
                 return;
             }
 
+            await RefreshPagesListAsync();
             btnGoto.Enabled = true;
         }
         catch (Exception ex)
@@ -363,17 +365,7 @@ public partial class MainForm : Form
 
     private async void btnRefreshPages_Click(object sender, EventArgs e)
     {
-        lstPages.Items.Clear();
-        if (Playwright.Context is null)
-        {
-            return;
-        }
-
-        foreach (var page in Playwright.Context.Pages)
-        {
-            await Task.Yield();
-            lstPages.Items.Add(new PageItem(page, await page.TitleAsync()));
-        }
+        await RefreshPagesListAsync();
     }
 
     private async void btnOpenNewTab_Click(object sender, EventArgs e)
@@ -451,6 +443,20 @@ public partial class MainForm : Form
     {
         lstPages.InvokeSafe(() =>
         {
+            for (var i = 0; i < lstPages.Items.Count; i++)
+            {
+                if (lstPages.Items[i] is PageItem existing && ReferenceEquals(existing.Page, page.Page))
+                {
+                    lstPages.Items[i] = page;
+                    if (lstPages.SelectedIndex < 0)
+                    {
+                        lstPages.SelectedIndex = 0;
+                    }
+
+                    return;
+                }
+            }
+
             lstPages.Items.Add(page);
             if (lstPages.SelectedIndex < 0)
             {
@@ -471,6 +477,22 @@ public partial class MainForm : Form
                 }
             }
         });
+    }
+
+    private async Task RefreshPagesListAsync()
+    {
+        var pages = await Playwright.GetAttachedPagesAsync();
+        lstPages.Items.Clear();
+
+        foreach (var page in pages)
+        {
+            lstPages.Items.Add(page);
+        }
+
+        if (lstPages.Items.Count > 0 && lstPages.SelectedIndex < 0)
+        {
+            lstPages.SelectedIndex = 0;
+        }
     }
 
     private static bool IsDesignMode()

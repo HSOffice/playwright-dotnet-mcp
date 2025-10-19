@@ -3,6 +3,7 @@ using PlaywrightRemoteBrowserLauncher.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace PlaywrightRemoteBrowserLauncher.Services;
 
@@ -118,29 +119,47 @@ public sealed class PlaywrightController : IAsyncDisposable
             return null;
         }
 
+        var attachedPages = new List<(IPage Page, string Name, string? Title)>();
         foreach (var page in pages)
         {
-            AttachPage(page, downloadDirectory: null);
+            string? title = null;
+            string? titleError = null;
+            try
+            {
+                title = await page.TitleAsync();
+            }
+            catch (Exception ex)
+            {
+                titleError = ex.Message;
+            }
+
+            AttachPage(page, downloadDirectory: null, title);
+
+            var name = _pageNames.TryGetValue(page, out var assignedName)
+                ? assignedName
+                : $"Page-{attachedPages.Count + 1}";
+
+            if (!string.IsNullOrWhiteSpace(titleError))
+            {
+                _log($"读取 {name} 标题失败：{titleError}");
+            }
+
+            attachedPages.Add((page, name, title));
         }
 
-        _primaryPage = pages[0];
-
-        try
+        foreach (var info in attachedPages)
         {
-            var title = await _primaryPage.TitleAsync();
-            if (!string.IsNullOrWhiteSpace(title))
+            if (string.IsNullOrWhiteSpace(info.Title))
             {
-                _log($"✅ 已获取页面：{title}");
+                _log($"✅ 已获取页面：{info.Name}");
             }
             else
             {
-                _log("✅ 已获取现有页面。");
+                _log($"✅ 已获取页面：{info.Name} | 标题：{info.Title}");
             }
         }
-        catch (Exception ex)
-        {
-            _log("已获取现有页面，但读取标题失败：" + ex.Message);
-        }
+
+        _primaryPage = attachedPages[0].Page;
 
         return _primaryPage;
     }
@@ -162,6 +181,27 @@ public sealed class PlaywrightController : IAsyncDisposable
         _primaryPage = page;
         _log("✅ 已创建 Context + Page");
         return page;
+    }
+
+    public async Task<IReadOnlyList<PageItem>> GetAttachedPagesAsync()
+    {
+        var snapshot = new List<PageItem>();
+        foreach (var entry in _pageNames.OrderBy(static kvp => kvp.Value, StringComparer.Ordinal))
+        {
+            string? title = null;
+            try
+            {
+                title = await entry.Key.TitleAsync();
+            }
+            catch
+            {
+                // ignored - 页面可能暂时没有标题
+            }
+
+            snapshot.Add(new PageItem(entry.Key, entry.Value, title));
+        }
+
+        return snapshot;
     }
 
     public void SelectPage(IPage? page)
@@ -341,7 +381,7 @@ public sealed class PlaywrightController : IAsyncDisposable
         }
     }
 
-    private void AttachPage(IPage page, string? downloadDirectory)
+    private void AttachPage(IPage page, string? downloadDirectory, string? title = null)
     {
         if (_pageNames.ContainsKey(page))
         {
@@ -397,7 +437,7 @@ public sealed class PlaywrightController : IAsyncDisposable
             PageClosed?.Invoke(page);
         };
 
-        PageAttached?.Invoke(new PageItem(page, name));
+        PageAttached?.Invoke(new PageItem(page, name, title));
     }
 
     public async ValueTask DisposeAsync()

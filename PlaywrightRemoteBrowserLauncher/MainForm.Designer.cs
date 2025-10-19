@@ -266,7 +266,7 @@ partial class MainForm
         btnNewPage.Name = "btnNewPage";
         btnNewPage.Size = new Size(105, 40);
         btnNewPage.TabIndex = 3;
-        btnNewPage.Text = "4-新建 Page";
+        btnNewPage.Text = "4-获取 Page";
         btnNewPage.UseVisualStyleBackColor = true;
         btnNewPage.Click += btnNewPage_Click;
         // 

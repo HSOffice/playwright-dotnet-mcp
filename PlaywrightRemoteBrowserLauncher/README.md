@@ -2,7 +2,7 @@
 
 本项目是一个面向 Windows 的 WinForms 工具，旨在帮助开发者启动并管理基于 Chromium 的远程浏览器实例，随后通过 [Microsoft Playwright](https://playwright.dev/dotnet/) 的 CDP 支持与之交互。工具聚焦于调试及自动化场景，提供了一键启动、等待 DevTools、连接 Playwright、创建页面、导航、采集日志与截图等常用功能。
 
-<img width="550" height="330" alt="image" src="https://github.com/user-attachments/assets/8b39207b-0500-4560-99eb-191bb3786f28" />
+<img width="1100" height="660" alt="image" src="https://github.com/user-attachments/assets/8b39207b-0500-4560-99eb-191bb3786f28" />
 
 ## 目录结构
 

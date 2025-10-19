@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PlaywrightRemoteBrowserLauncher.Extensions;
 using PlaywrightRemoteBrowserLauncher.Models;
@@ -255,6 +256,19 @@ public partial class MainForm : Form
         }
     }
 
+    private static readonly Regex UrlPattern = new(
+        "^(https?:\\/\\/)?" +
+        "(" +
+            "localhost" +
+            "|" +
+            "(\\d{1,3}\\.){3}\\d{1,3}" +
+            "|" +
+            "([a-z0-9-]+\\.)+[a-z]{2,}" +
+        ")" +
+        "(:\\d+)?" +
+        "(\\/.*)?$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private static string BuildNavigationUrl(string? input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -290,17 +304,7 @@ public partial class MainForm : Form
             return false;
         }
 
-        if (Uri.TryCreate(input, UriKind.Absolute, out var absoluteUri) && !string.IsNullOrWhiteSpace(absoluteUri.Host))
-        {
-            return true;
-        }
-
-        if (Uri.TryCreate($"https://{input}", UriKind.Absolute, out var httpsUri) && !string.IsNullOrWhiteSpace(httpsUri.Host))
-        {
-            return true;
-        }
-
-        return false;
+        return UrlPattern.IsMatch(input);
     }
 
     private async void btnRunAll_Click(object sender, EventArgs e)

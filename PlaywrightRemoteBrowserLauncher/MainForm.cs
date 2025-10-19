@@ -263,8 +263,13 @@ public partial class MainForm : Form
         }
 
         var trimmedInput = input.Trim();
-        var candidate = trimmedInput;
 
+        if (!IsLikelyUrl(trimmedInput))
+        {
+            return $"https://www.bing.com/search?q={Uri.EscapeDataString(trimmedInput)}";
+        }
+
+        var candidate = trimmedInput;
         if (!candidate.Contains("://", StringComparison.Ordinal))
         {
             candidate = $"https://{candidate}";
@@ -276,6 +281,26 @@ public partial class MainForm : Form
         }
 
         return $"https://www.bing.com/search?q={Uri.EscapeDataString(trimmedInput)}";
+    }
+
+    private static bool IsLikelyUrl(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input) || input.Contains(' '))
+        {
+            return false;
+        }
+
+        if (Uri.TryCreate(input, UriKind.Absolute, out var absoluteUri) && !string.IsNullOrWhiteSpace(absoluteUri.Host))
+        {
+            return true;
+        }
+
+        if (Uri.TryCreate($"https://{input}", UriKind.Absolute, out var httpsUri) && !string.IsNullOrWhiteSpace(httpsUri.Host))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private async void btnRunAll_Click(object sender, EventArgs e)

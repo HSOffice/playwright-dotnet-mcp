@@ -228,16 +228,16 @@ partial class MainForm
         btnLaunch.Location = new Point(14, 24);
         btnLaunch.Margin = new Padding(4);
         btnLaunch.Name = "btnLaunch";
-        btnLaunch.Size = new Size(95, 40);
+        btnLaunch.Size = new Size(120, 40);
         btnLaunch.TabIndex = 0;
-        btnLaunch.Text = "1-启动进程";
+        btnLaunch.Text = "1-启动/获取进程";
         btnLaunch.UseVisualStyleBackColor = true;
         btnLaunch.Click += btnLaunch_Click;
-        // 
+        //
         // btnWaitDevTools
-        // 
+        //
         btnWaitDevTools.Enabled = false;
-        btnWaitDevTools.Location = new Point(116, 24);
+        btnWaitDevTools.Location = new Point(138, 24);
         btnWaitDevTools.Margin = new Padding(4);
         btnWaitDevTools.Name = "btnWaitDevTools";
         btnWaitDevTools.Size = new Size(100, 40);
@@ -249,7 +249,7 @@ partial class MainForm
         // btnConnect
         // 
         btnConnect.Enabled = false;
-        btnConnect.Location = new Point(223, 24);
+        btnConnect.Location = new Point(242, 24);
         btnConnect.Margin = new Padding(4);
         btnConnect.Name = "btnConnect";
         btnConnect.Size = new Size(110, 40);
@@ -261,7 +261,7 @@ partial class MainForm
         // btnNewPage
         // 
         btnNewPage.Enabled = false;
-        btnNewPage.Location = new Point(340, 24);
+        btnNewPage.Location = new Point(356, 24);
         btnNewPage.Margin = new Padding(4);
         btnNewPage.Name = "btnNewPage";
         btnNewPage.Size = new Size(105, 40);
@@ -273,7 +273,7 @@ partial class MainForm
         // btnGoto
         // 
         btnGoto.Enabled = false;
-        btnGoto.Location = new Point(452, 24);
+        btnGoto.Location = new Point(465, 24);
         btnGoto.Margin = new Padding(4);
         btnGoto.Name = "btnGoto";
         btnGoto.Size = new Size(100, 40);
@@ -285,7 +285,7 @@ partial class MainForm
         // btnCloseAll
         // 
         btnCloseAll.Enabled = false;
-        btnCloseAll.Location = new Point(559, 24);
+        btnCloseAll.Location = new Point(569, 24);
         btnCloseAll.Margin = new Padding(4);
         btnCloseAll.Name = "btnCloseAll";
         btnCloseAll.Size = new Size(100, 40);

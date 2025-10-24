@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PlaywrightRemoteBrowserLauncher.Extensions;
@@ -98,16 +96,9 @@ public partial class MainForm : Form
                 numPort.Value = parsedPort;
             }
         }
-        var port = (int)numPort.Value;
-        if (!IsPortAvailable(port, out var portError))
-        {
-            AppendLog(portError ?? $"❌ 端口 {port} 当前不可用，请更换端口后重试。");
-            return;
-        }
-
         var started = _processLauncher.Start(
             commandLine,
-            port,
+            (int)numPort.Value,
             UserDataRoot,
             txtProxy.Text.Trim(),
             AppendLog);
@@ -116,29 +107,6 @@ public partial class MainForm : Form
         {
             btnWaitDevTools.Enabled = true;
             btnCloseAll.Enabled = true;
-        }
-    }
-
-    private static bool IsPortAvailable(int port, out string? errorMessage)
-    {
-        try
-        {
-            using var listener = new TcpListener(IPAddress.Loopback, port);
-            listener.Server.ExclusiveAddressUse = true;
-            listener.Start();
-            listener.Stop();
-            errorMessage = null;
-            return true;
-        }
-        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
-        {
-            errorMessage = $"❌ 端口 {port} 已被其他进程占用，请更换端口后重试。";
-            return false;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"❌ 无法检测端口 {port} 是否可用：{ex.Message}";
-            return false;
         }
     }
 

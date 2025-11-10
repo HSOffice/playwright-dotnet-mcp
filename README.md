@@ -17,7 +17,11 @@ Playwright .NET MCP 为需要将浏览器能力暴露给大语言模型 (LLM) �
 | --- | --- |
 | `PlaywrightMcpServer/` | Playwright MCP 核心实现：`PlaywrightTools` 部分类、响应序列化、Tab 管理与快照构建。|
 | `PlaywrightMcpServer.Tests/` | xUnit 测试套件，覆盖响应模型、快照 Markdown 构建、Tab 状态等逻辑。|
+| `PlaywrightRemoteBrowserLauncher/` | Windows WinForms 浏览器启动器：封装远程调试端口监听、Playwright 连接、日志/截图/下载管线。|
+| `WebView2BrowserHost/` | 基于 WebView2 的极简浏览器宿主，用作远程调试示例目标与 Launcher 的默认测试浏览器。|
+| `DetectBrowserProcess/` | Windows 辅助工具，枚举进程并检测是否嵌入 Electron/CEF/WebView2 等浏览器运行时。|
 | `docs/` | 设计记录与迁移规划，含快照能力说明、TypeScript 版本对照等。|
+| `PlaywrightDotnetMcp.sln` | 主解决方案文件，聚合服务器、测试、桌面工具与示例宿主等多个项目。|
 
 ---
 
